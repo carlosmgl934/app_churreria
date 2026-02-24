@@ -423,7 +423,7 @@ export async function renderReparto(container, params = {}) {
         ${
           isEditMode
             ? `<button class="btn btn-outline btn-sm" data-add-bar="${fi}">+ Bar</button>
-        <button style="background:none;border:none;color:var(--danger);font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer;padding:6px 10px;border-radius:6px;white-space:nowrap;-webkit-tap-highlight-color:transparent;border:1px solid rgba(239,68,68,0.3);letter-spacing:0" data-del-franja="${fi}">🗑 Eliminar franja</button>`
+        <button style="background:none;border:none;color:var(--danger);font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer;padding:6px 10px;border-radius:6px;white-space:nowrap;-webkit-tap-highlight-color:transparent;border:1px solid rgba(239,68,68,0.3);letter-spacing:0" data-del-franja="${fi}">Borrar franja</button>`
             : ""
         }
       </div>
