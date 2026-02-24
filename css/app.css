@@ -109,7 +109,7 @@ body {
 .page-content {
   flex: 1;
   padding: 16px;
-  padding-top: calc(85px + 16px);
+  padding-top: calc(100px + 16px);
   padding-bottom: calc(var(--nav-h) + 16px);
   overflow-y: auto;
   overflow-x: clip; /* allow children to have their own horizontal scroll */
