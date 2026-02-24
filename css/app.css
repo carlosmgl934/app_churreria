@@ -406,13 +406,13 @@ body {
 }
 .pedido-bar-name {
   flex: 1;
+  font-family: "Playfair Display", Georgia, serif;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text);
   min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.2;
+  text-transform: capitalize;
 }
 .qty-input {
   width: 76px;

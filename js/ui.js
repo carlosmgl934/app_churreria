@@ -68,8 +68,10 @@ export function showTimePicker(initialTime, onChange) {
   `;
   document.body.appendChild(overlay);
 
-  document.getElementById("tp-cancel").onclick = () =>
+  document.getElementById("tp-cancel").onclick = () => {
     document.body.removeChild(overlay);
+    onChange(null);
+  };
   document.getElementById("tp-ok").onclick = () => {
     const nh = document.getElementById("tp-h").value;
     const nm = document.getElementById("tp-m").value;
@@ -181,7 +183,7 @@ export async function renderDashboard(container) {
     <div class="today-summary">
       <div class="today-chip">
         <div class="chip-num">${dpSemana.length}</div>
-        <div class="chip-label">📋 Repartos</div>
+        <div class="chip-label">Repartos</div>
       </div>
       <div class="today-chip">
         <div class="chip-num">${churrosSemana}</div>
@@ -380,32 +382,37 @@ export async function renderReparto(container, params = {}) {
       .map((p, pi) => {
         if (isEditMode) {
           return `
-          <div class="pedido-row" data-fi="${fi}" data-pi="${pi}">
-            <div class="pedido-bar-name">${p.barNombre}</div>
-            <div>
-              <div class="qty-label">Churros</div>
-              <input class="qty-input" type="number" min="0" value="${p.churros || ""}" placeholder="0" data-fi="${fi}" data-pi="${pi}" data-field="churros">
+          <div class="pedido-row" data-fi="${fi}" data-pi="${pi}" style="flex-direction:column;align-items:stretch;gap:6px;padding:10px 12px;border-radius:8px;margin:3px 0;background:var(--bg)">
+            <div style="display:flex;align-items:center;gap:8px;justify-content:space-between">
+              <div class="pedido-bar-name" style="font-family:'Playfair Display',Georgia,serif;font-size:1.05rem;font-weight:600">${p.barNombre}</div>
+              <button style="background:#ef4444;border:none;border-radius:6px;width:28px;height:28px;min-width:28px;color:white;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent" data-del-pedido data-fi="${fi}" data-pi="${pi}">✕</button>
             </div>
-            <div>
-              <div class="qty-label">Porras</div>
-              <input class="qty-input" type="number" min="0" value="${p.porras || ""}" placeholder="0" data-fi="${fi}" data-pi="${pi}" data-field="porras">
+            <div style="display:flex;gap:8px">
+              <div style="flex:1">
+                <div class="qty-label">Churros</div>
+                <input class="qty-input" type="number" min="0" value="${p.churros || ""}" placeholder="0" data-fi="${fi}" data-pi="${pi}" data-field="churros" style="width:100%;box-sizing:border-box">
+              </div>
+              <div style="flex:1">
+                <div class="qty-label">Porras</div>
+                <input class="qty-input" type="number" min="0" value="${p.porras || ""}" placeholder="0" data-fi="${fi}" data-pi="${pi}" data-field="porras" style="width:100%;box-sizing:border-box">
+              </div>
             </div>
-            <button style="background:#ef4444;border:none;border-radius:6px;width:28px;height:28px;min-width:28px;color:white;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent" data-del-pedido data-fi="${fi}" data-pi="${pi}">✕</button>
           </div>`;
         } else {
           return `
-          <div class="pedido-row" style="cursor:pointer;padding:10px 8px;border-radius:6px;margin:2px 0;transition:all 0.2s;background:${p.entregado ? "rgba(34,197,94,0.1)" : "transparent"};border-left:3px solid ${p.entregado ? "var(--success)" : "transparent"}" data-toggle-entregado data-fi="${fi}" data-pi="${pi}">
-            <div class="pedido-bar-name" style="text-decoration:${p.entregado ? "line-through" : "none"};font-size:1.05rem;color:${p.entregado ? "var(--text-muted)" : "var(--text)"};transition:all 0.2s">${p.barNombre}</div>
-            <div style="text-align:center;width:64px;margin-right:8px;opacity:${p.entregado ? "0.45" : "1"}">
-              <div style="font-size:1.15rem;font-weight:800;color:var(--gold);line-height:1.1">${p.churros || 0}</div>
-              <div class="qty-label" style="font-size:0.7rem">Churros</div>
+          <div class="pedido-row" style="cursor:pointer;padding:10px 12px;border-radius:8px;margin:3px 0;flex-direction:column;align-items:stretch;gap:2px;transition:all 0.2s;background:${p.entregado ? "rgba(34,197,94,0.08)" : "var(--bg)"};border-left:3px solid ${p.entregado ? "var(--success)" : "transparent"}" data-toggle-entregado data-fi="${fi}" data-pi="${pi}">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+              <div style="font-family:'Playfair Display',Georgia,serif;font-size:1.1rem;font-weight:600;color:${p.entregado ? "var(--text-muted)" : "var(--text)"};text-decoration:${p.entregado ? "line-through" : "none"};line-height:1.2">${p.barNombre}</div>
+              <div style="flex-shrink:0;color:${p.entregado ? "var(--success)" : "rgba(255,255,255,0.18)"}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              </div>
             </div>
-            <div style="text-align:center;width:64px;margin-right:8px;opacity:${p.entregado ? "0.45" : "1"}">
-              <div style="font-size:1.15rem;font-weight:800;color:var(--gold);line-height:1.1">${p.porras || 0}</div>
-              <div class="qty-label" style="font-size:0.7rem">Porras</div>
-            </div>
-            <div style="display:flex;align-items:center;justify-content:center;width:44px;color:${p.entregado ? "var(--success)" : "var(--surface2)"}">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <div style="display:flex;align-items:center;gap:5px;opacity:${p.entregado ? "0.45" : "1"}">
+              <span style="font-size:1rem;font-weight:900;color:var(--gold)">${p.churros || 0}</span>
+              <span style="font-size:0.78rem;color:var(--text-muted);font-weight:600">churros</span>
+              <span style="color:var(--text-muted);font-size:0.8rem;margin:0 2px">·</span>
+              <span style="font-size:1rem;font-weight:900;color:var(--gold)">${p.porras || 0}</span>
+              <span style="font-size:0.78rem;color:var(--text-muted);font-weight:600">porras</span>
             </div>
           </div>`;
         }
@@ -416,18 +423,28 @@ export async function renderReparto(container, params = {}) {
       <div class="franja-header">
         ${
           isEditMode
-            ? `<div class="form-input franja-hora" data-fi="${fi}" style="width:90px;min-height:46px;font-size:1.2rem;font-weight:900;color:var(--gold);padding:10px 4px;display:flex;align-items:center;justify-content:center;cursor:pointer">${f.hora}</div>`
+            ? `<div guarclass="form-input franja-hora" data-fi="${fi}" style="width:90px;min-height:46px;font-size:1.2rem;font-weight:900;color:var(--gold);padding:10px 4px;display:flex;align-items:center;justify-content:center;cursor:pointer">${f.hora}</div>`
             : `<div style="font-size:1.2rem;font-weight:700;color:var(--gold);flex:0 0 auto;min-width:70px">${f.hora}</div>`
         }
-        <div class="franja-info">${f.pedidos.length} bar${f.pedidos.length !== 1 ? "es" : ""}</div>
         ${
           isEditMode
-            ? `<button class="btn btn-outline btn-sm" data-add-bar="${fi}">+ Bar</button>
-        <button style="background:none;border:none;color:var(--danger);font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer;padding:6px 10px;border-radius:6px;white-space:nowrap;-webkit-tap-highlight-color:transparent;border:1px solid rgba(239,68,68,0.3);letter-spacing:0" data-del-franja="${fi}">Borrar franja</button>`
-            : ""
+            ? `<button class="btn btn-primary btn-sm" style="font-weight:800;font-size:0.9rem;white-space:nowrap;margin-left:auto" data-add-bar="${fi}">+ Añadir bar</button>`
+            : `<div class="franja-info" style="margin-left:8px">${f.pedidos.length} bar${f.pedidos.length !== 1 ? "es" : ""}</div>`
         }
       </div>
-      <div class="franja-body" style="${!isEditMode && pedidosHTML.length ? "padding-top:0" : ""}">${pedidosHTML.length ? pedidosHTML : isEditMode ? '<div style="color:var(--text-muted);text-align:center;padding:12px;font-size:0.9rem">Añade bares a esta franja</div>' : '<div style="color:var(--text-muted);text-align:center;padding:12px;font-size:0.9rem">Sin repartos previstos</div>'}</div>
+      ${
+        isEditMode && f.pedidos.length > 0
+          ? `<div style="padding:6px 16px 0;font-size:0.78rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">${f.pedidos.length} bar${f.pedidos.length !== 1 ? "es" : ""}</div>`
+          : ""
+      }
+      <div class="franja-body" style="${!isEditMode && pedidosHTML.length ? "padding-top:0" : ""}">${
+        pedidosHTML.length
+          ? pedidosHTML
+          : isEditMode
+            ? '<div style="color:var(--text-muted);text-align:center;padding:12px;font-size:0.9rem">A&ntilde;ade bares a esta franja</div>'
+            : '<div style="color:var(--text-muted);text-align:center;padding:12px;font-size:0.9rem">Sin repartos previstos</div>'
+      }</div>
+      ${isEditMode ? `<div style="padding:0 12px 12px"><button class="btn btn-danger" style="width:100%;font-size:0.85rem;font-weight:700" data-del-franja="${fi}">🗑 Borrar esta franja horaria</button></div>` : ""}
     </div>`;
   }
 
@@ -447,9 +464,11 @@ export async function renderReparto(container, params = {}) {
     container.querySelectorAll(".franja-hora").forEach((inp) => {
       inp.addEventListener("click", () => {
         showTimePicker(franjas[+inp.dataset.fi].hora, (newTime) => {
-          franjas[+inp.dataset.fi].hora = newTime;
-          franjas.sort((a, b) => a.hora.localeCompare(b.hora));
-          render();
+          if (newTime) {
+            franjas[+inp.dataset.fi].hora = newTime;
+            franjas.sort((a, b) => a.hora.localeCompare(b.hora));
+            render();
+          }
         });
       });
     });
@@ -521,8 +540,12 @@ export async function renderReparto(container, params = {}) {
           showTimePicker("06:00", (newTime) => {
             const index = franjas.findIndex((f) => f.hora === sentinel);
             if (index !== -1) {
-              franjas[index].hora = newTime;
-              franjas.sort((a, b) => a.hora.localeCompare(b.hora));
+              if (newTime) {
+                franjas[index].hora = newTime;
+                franjas.sort((a, b) => a.hora.localeCompare(b.hora));
+              } else {
+                franjas.splice(index, 1);
+              }
               render();
             }
           });
@@ -659,21 +682,52 @@ export async function renderReparto(container, params = {}) {
 
     document
       .getElementById("btn-new-bar-modal")
-      .addEventListener("click", async () => {
-        const nombre = prompt("Nombre del bar:");
-        if (!nombre || !nombre.trim()) return;
-        const id = await addBar(nombre);
-        bares.push({ id, nombre: nombre.trim(), notas: "" });
-        bares.sort((a, b) => a.nombre.localeCompare(b.nombre));
-        franjas[fi].pedidos.push({
-          barId: id,
-          barNombre: nombre.trim(),
-          churros: 0,
-          porras: 0,
-          entregado: false,
+      .addEventListener("click", () => {
+        const btn = document.getElementById("btn-new-bar-modal");
+        const container2 = btn.parentElement;
+        btn.outerHTML = `
+          <div id="new-bar-form" style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+            <input id="new-bar-input" class="form-input" placeholder="Nombre del nuevo bar..."
+              style="font-size:1rem" autocapitalize="words" autocomplete="off">
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-secondary btn-sm" style="flex:1" id="btn-new-bar-cancel">✕ Cancelar</button>
+              <button class="btn btn-primary btn-sm" style="flex:2;font-weight:800" id="btn-new-bar-save">✓ Guardar bar</button>
+            </div>
+          </div>`;
+        const input = document.getElementById("new-bar-input");
+        input.focus();
+        async function saveNewBar() {
+          const nombre = input.value.trim();
+          if (!nombre) {
+            input.focus();
+            return;
+          }
+          const capitalizado = nombre.charAt(0).toUpperCase() + nombre.slice(1);
+          const id = await addBar(capitalizado);
+          bares.push({ id, nombre: capitalizado, notas: "" });
+          bares.sort((a, b) => a.nombre.localeCompare(b.nombre));
+          franjas[fi].pedidos.push({
+            barId: id,
+            barNombre: capitalizado,
+            churros: 0,
+            porras: 0,
+            entregado: false,
+          });
+          document.body.removeChild(overlay);
+          render();
+        }
+        document
+          .getElementById("btn-new-bar-save")
+          .addEventListener("click", saveNewBar);
+        document
+          .getElementById("btn-new-bar-cancel")
+          .addEventListener("click", () => {
+            document.getElementById("new-bar-form").outerHTML =
+              `<button class="btn btn-outline btn-full" id="btn-new-bar-modal">+ Añadir bar nuevo</button>`;
+          });
+        input.addEventListener("keydown", (e) => {
+          if (e.key === "Enter") saveNewBar();
         });
-        document.body.removeChild(overlay);
-        render();
       });
   }
 
@@ -693,10 +747,22 @@ export async function renderReparto(container, params = {}) {
       .slice(0, 15)
       .map((r) => {
         const tot = calcTotales(r.franjas);
-        return `<div class="bar-select-item" data-copiar-fecha="${r.fecha}">
-        <div style="font-size:1rem;font-weight:700">📋 ${formatFechaMediana(r.fecha)}</div>
-        <div style="font-size:0.8rem;color:var(--text-muted)">${tot.bares} bares · ${tot.churros} churros · ${tot.porras} porras</div>
-      </div>`;
+        const d = parseFecha(r.fecha);
+        const dayName = DIAS_SEMANA[d.getDay()];
+        const dayNum = d.getDate();
+        const monthName = MESES[d.getMonth()].substring(0, 3);
+        const year = d.getFullYear();
+        return `<div class="bar-select-item" data-copiar-fecha="${r.fecha}" style="gap:14px;align-items:center">
+          <div style="flex-shrink:0;background:var(--surface2);border-radius:8px;padding:8px 10px;text-align:center;min-width:52px">
+            <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px">${dayName}</div>
+            <div style="font-size:1.4rem;font-weight:900;color:var(--gold);line-height:1">${dayNum}</div>
+            <div style="font-size:0.72rem;font-weight:700;color:var(--text-muted);text-transform:uppercase">${monthName} ${year !== new Date().getFullYear() ? year : ""}</div>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:0.95rem;font-weight:700;color:var(--text)">${tot.bares} bar${tot.bares !== 1 ? "es" : ""}</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px">${tot.churros} churros · ${tot.porras} porras</div>
+          </div>
+        </div>`;
       })
       .join("");
 
@@ -864,7 +930,7 @@ export async function renderCalendario(container) {
           </div>`,
           )
           .join("")}
-        <button class="btn btn-outline btn-full" id="btn-go-edit" style="display:flex;align-items:center;justify-content:center;gap:8px">${iconEdit(20)} Editar reparto</button>
+        <button class="btn btn-outline btn-full" id="btn-go-edit" style="display:flex;align-items:center;justify-content:center;gap:8px">${iconEdit(20)} Ver / Editar reparto</button>
       </div>`;
     document
       .getElementById("btn-go-edit")
