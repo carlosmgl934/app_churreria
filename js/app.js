@@ -6,13 +6,35 @@ import {
   renderBares,
   renderStats,
 } from "./ui.js";
+import {
+  iconHome,
+  iconEdit,
+  iconCalendar,
+  iconBarUI,
+  iconStats,
+} from "./icons.js";
 
 const TABS = [
-  { id: "inicio", icon: "🏠", label: "Inicio", render: renderDashboard },
-  { id: "reparto", icon: "✏️", label: "Reparto", render: renderReparto },
-  { id: "calendar", icon: "📅", label: "Calendario", render: renderCalendario },
-  { id: "bares", icon: "🏪", label: "Bares", render: renderBares },
-  { id: "stats", icon: "📊", label: "Stats", render: renderStats },
+  {
+    id: "inicio",
+    icon: iconHome(22),
+    label: "Inicio",
+    render: renderDashboard,
+  },
+  {
+    id: "reparto",
+    icon: iconEdit(22),
+    label: "Reparto",
+    render: renderReparto,
+  },
+  {
+    id: "calendar",
+    icon: iconCalendar(22),
+    label: "Calendario",
+    render: renderCalendario,
+  },
+  { id: "bares", icon: iconBarUI(22), label: "Bares", render: renderBares },
+  { id: "stats", icon: iconStats(22), label: "Stats", render: renderStats },
 ];
 
 let currentTab = "inicio";

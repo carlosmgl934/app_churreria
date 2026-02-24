@@ -11,14 +11,15 @@
 }
 
 :root {
+  color-scheme: dark;
   --gold: #f59e0b;
   --gold-l: #fcd34d;
   --gold-d: #d97706;
   --brown: #78350f;
   --brown-d: #451a03;
   --cream: #fef3c7;
-  --bg: #1c0a00;
-  --bg2: #2d1206;
+  --bg: #220f04;
+  --bg2: #3d1a08;
   --bg3: #3d1a08;
   --surface: #3d1a08;
   --surface2: #4d2210;
@@ -276,6 +277,7 @@ body {
   transition: border-color 0.2s;
   min-height: 56px;
   -webkit-appearance: none;
+  appearance: none;
 }
 .form-input:focus {
   outline: none;
@@ -283,8 +285,9 @@ body {
 }
 .form-input::placeholder {
   color: var(--text-muted);
-  opacity: 0.6;
+  opacity: 0.7;
 }
+
 .form-row {
   display: flex;
   gap: 10px;
@@ -407,6 +410,7 @@ body {
   padding: 10px 8px;
   text-align: center;
   -webkit-appearance: none;
+  appearance: none;
   min-height: 48px;
 }
 .qty-input:focus {
@@ -734,12 +738,13 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.75);
   z-index: 500;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  animation: fadeIn 0.2s;
+  padding: 20px;
+  animation: fadeIn 0.15s;
 }
 @keyframes fadeIn {
   from {
@@ -751,21 +756,24 @@ body {
 }
 .modal-box {
   width: 100%;
-  max-width: 500px;
+  max-width: 450px;
   background: var(--bg2);
-  border-radius: var(--radius) var(--radius) 0 0;
-  padding: 24px 20px env(safe-area-inset-bottom, 16px);
-  border-top: 3px solid var(--gold-d);
+  border-radius: var(--radius);
+  padding: 24px 20px;
+  border: 2px solid var(--gold-d);
   max-height: 90dvh;
   overflow-y: auto;
-  animation: slideUpModal 0.3s ease;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+  animation: popInModal 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-@keyframes slideUpModal {
+@keyframes popInModal {
   from {
-    transform: translateY(100%);
+    transform: scale(0.95) translateY(10px);
+    opacity: 0;
   }
   to {
-    transform: translateY(0);
+    transform: scale(1) translateY(0);
+    opacity: 1;
   }
 }
 .modal-title {

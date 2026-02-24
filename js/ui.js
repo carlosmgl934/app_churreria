@@ -21,7 +21,62 @@ import {
   buildCalendarMatrix,
   calcTotales,
 } from "./calendar.js";
-import { iconChurro, iconPorra, churroLabel, porraLabel } from "./icons.js";
+import {
+  iconChurro,
+  iconPorra,
+  churroLabel,
+  porraLabel,
+  iconHome,
+  iconEdit,
+  iconCalendar,
+  iconBarUI,
+  iconStats,
+  iconClock,
+  iconVan,
+} from "./icons.js";
+
+// ── Time Picker Custom ────────────────────────────────────────────────────────
+export function showTimePicker(initialTime, onChange) {
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
+  let [h, m] = (initialTime || "06:00").split(":");
+  h = h || "06";
+  m = m || "00";
+
+  overlay.innerHTML = `
+    <div class="modal-box" style="text-align:center;max-width:330px;padding:32px 20px">
+      <div class="modal-title" style="justify-content:center;font-size:1.6rem;margin-bottom:30px">Selecciona Hora</div>
+      <div style="display:flex;justify-content:center;gap:16px;margin-bottom:40px;align-items:center">
+        <select id="tp-h" class="form-input" style="font-size:2.8rem;padding:8px;text-align:center;width:110px;height:90px;border-radius:18px;background:var(--bg)">
+          ${Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0"))
+            .map(
+              (x) =>
+                `<option value="${x}" ${x === h ? "selected" : ""}>${x}</option>`,
+            )
+            .join("")}
+        </select>
+        <div style="font-size:2.8rem;font-weight:900;color:var(--text-muted)">:</div>
+        <select id="tp-m" class="form-input" style="font-size:2.8rem;padding:8px;text-align:center;width:110px;height:90px;border-radius:18px;background:var(--bg)">
+          ${["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"].map((x) => `<option value="${x}" ${x === m ? "selected" : ""}>${x}</option>`).join("")}
+        </select>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-secondary" style="flex:1;font-size:1.1rem" id="tp-cancel">✕ Cancelar</button>
+        <button class="btn btn-primary" style="flex:1.5;font-size:1.1rem" id="tp-ok">✓ Aceptar</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+
+  document.getElementById("tp-cancel").onclick = () =>
+    document.body.removeChild(overlay);
+  document.getElementById("tp-ok").onclick = () => {
+    const nh = document.getElementById("tp-h").value;
+    const nm = document.getElementById("tp-m").value;
+    document.body.removeChild(overlay);
+    onChange(`${nh}:${nm}`);
+  };
+}
 
 // ── Toasts ───────────────────────────────────────────────────────────────────
 export function toast(msg, type = "") {
@@ -102,11 +157,11 @@ export async function renderDashboard(container) {
       <div class="hero-subtitle">${diaNombre}, ${diaNum} de ${mes}</div>
     </div>
 
-    <div class="section-title">📦 Hoy</div>
+    <div class="section-title" style="display:flex;align-items:center;gap:6px">${iconVan(20)} Hoy</div>
     <div class="today-summary">
       <div class="today-chip">
         <div class="chip-num">${totHoy.bares}</div>
-        <div class="chip-label">🏪 Bares</div>
+        <div class="chip-label" style="display:flex;align-items:center;justify-content:center;gap:4px">${iconBarUI(16)} Bares</div>
       </div>
       <div class="today-chip">
         <div class="chip-num">${totHoy.churros}</div>
@@ -118,11 +173,11 @@ export async function renderDashboard(container) {
       </div>
     </div>
 
-    <button class="btn btn-primary btn-full" id="btn-reparto-hoy" style="margin-bottom:14px">
-      <span class="btn-icon">✏️</span> ${reparto ? "Ver / Editar reparto de hoy" : "Registrar reparto de hoy"}
+    <button class="btn btn-primary btn-full" id="btn-reparto-hoy" style="margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px">
+      ${iconEdit(20)} ${reparto ? "Ver / Editar reparto de hoy" : "Registrar reparto de hoy"}
     </button>
 
-    <div class="section-title">📅 Esta semana</div>
+    <div class="section-title">Esta semana</div>
     <div class="today-summary">
       <div class="today-chip">
         <div class="chip-num">${dpSemana.length}</div>
@@ -141,7 +196,7 @@ export async function renderDashboard(container) {
     ${
       allRepartos.length > 0
         ? `
-      <div class="section-title">🕐 Últimos repartos</div>
+      <div class="section-title" style="display:flex;align-items:center;gap:6px">${iconClock(20)} Últimos repartos</div>
       ${allRepartos
         .slice(0, 4)
         .map((r) => {
@@ -177,10 +232,23 @@ export async function renderReparto(container, params = {}) {
   const bares = await getBares();
   let fechaActual = params.fecha || hoy();
   let franjas = [];
+  let isEditMode = false;
 
   async function loadFranjas() {
     const r = await getRepartoByFecha(fechaActual);
-    franjas = r ? JSON.parse(JSON.stringify(r.franjas)) : [];
+    if (r) {
+      franjas = JSON.parse(JSON.stringify(r.franjas));
+      franjas.forEach((f) =>
+        f.pedidos.forEach((p) => {
+          if (p.entregado === undefined) p.entregado = false;
+        }),
+      );
+      franjas.sort((a, b) => a.hora.localeCompare(b.hora));
+      isEditMode = false; // By default open in read mode if data exists
+    } else {
+      franjas = [];
+      isEditMode = true; // Open in edit mode if new day
+    }
   }
   await loadFranjas();
 
@@ -189,15 +257,15 @@ export async function renderReparto(container, params = {}) {
     const totales = calcTotales(franjas);
 
     container.innerHTML = `
-      <div class="section-title">📅 Día del reparto</div>
+      <div class="section-title">${iconVan(20)} Día del reparto</div>
       <div id="day-picker" style="margin-bottom:4px"></div>
       <div style="text-align:center;font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;font-weight:600">
         ${formatFechaLarga(fechaActual)}
       </div>
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div class="section-title" style="margin:0">🕐 Franjas horarias</div>
-        <button class="btn btn-sm btn-outline" id="btn-add-franja">+ Añadir franja</button>
+        <div class="section-title" style="margin:0;display:flex;align-items:center;gap:6px">${iconClock(20)} Franjas horarias</div>
+        ${isEditMode ? `<div style="display:flex;gap:6px"><button class="btn btn-sm btn-outline" id="btn-copy-reparto" title="Copiar de otro día">📋 Copiar de...</button><button class="btn btn-sm btn-outline" id="btn-add-franja">+ Añadir franja</button></div>` : `<button class="btn btn-sm btn-outline" id="btn-toggle-edit" style="gap:4px;display:flex;align-items:center">${iconEdit(18)} Editar</button>`}
       </div>
 
       <div id="franjas-container">
@@ -205,7 +273,7 @@ export async function renderReparto(container, params = {}) {
           franjas.length === 0
             ? `
           <div class="empty-state">
-            <span class="empty-icon">🕐</span>
+            <div style="margin-bottom:12px;color:var(--text-muted)">${iconClock(48)}</div>
             <p>Sin franjas. Pulsa<br>"+ Añadir franja"</p>
           </div>`
             : franjas.map((f, fi) => renderFranjaHTML(f, fi, bares)).join("")
@@ -222,12 +290,19 @@ export async function renderReparto(container, params = {}) {
           <div style="width:1px;background:var(--surface2)"></div>
           <div><div style="font-size:1.8rem;font-weight:900;color:var(--gold)">${totales.bares}</div><div style="font-size:0.8rem;color:var(--text-muted);font-weight:700">BARES</div></div>
         </div>
-        <div style="display:flex;gap:10px;margin-bottom:14px">
-          <button class="btn btn-primary" style="flex:1" id="btn-guardar">💾 Guardar</button>
-          <button class="btn btn-danger btn-sm" id="btn-borrar">🗑️</button>
-        </div>
+        ${
+          isEditMode
+            ? `<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+                 <button class="btn btn-primary" id="btn-guardar" style="display:flex;align-items:center;justify-content:center;gap:6px"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Guardar reparto</button>
+                 <div style="display:flex;gap:10px">
+                   <button class="btn btn-secondary" style="flex:1" id="btn-cancel-edit">✕ Cancelar</button>
+                   <button class="btn btn-danger" style="flex:1" id="btn-borrar">🗑️ Eliminar reparto</button>
+                 </div>
+               </div>`
+            : ``
+        }
       `
-          : `<button class="btn btn-primary btn-full" id="btn-guardar" style="margin-bottom:14px;opacity:0.4" disabled>💾 Guardar reparto</button>`
+          : ``
       }
     `;
 
@@ -270,31 +345,57 @@ export async function renderReparto(container, params = {}) {
 
   function renderFranjaHTML(f, fi, bares) {
     const pedidosHTML = f.pedidos
-      .map(
-        (p, pi) => `
-      <div class="pedido-row" data-fi="${fi}" data-pi="${pi}">
-        <div class="pedido-bar-name">${p.barNombre}</div>
-        <div>
-          <div class="qty-label">Churros</div>
-          <input class="qty-input" type="number" min="0" value="${p.churros || ""}" placeholder="0" data-fi="${fi}" data-pi="${pi}" data-field="churros">
-        </div>
-        <div>
-          <div class="qty-label">Porras</div>
-          <input class="qty-input" type="number" min="0" value="${p.porras || ""}" placeholder="0" data-fi="${fi}" data-pi="${pi}" data-field="porras">
-        </div>
-        <button class="btn btn-danger btn-sm" style="padding:10px;min-height:44px;min-width:44px" data-del-pedido data-fi="${fi}" data-pi="${pi}">✕</button>
-      </div>`,
-      )
+      .map((p, pi) => {
+        if (isEditMode) {
+          return `
+          <div class="pedido-row" data-fi="${fi}" data-pi="${pi}">
+            <div class="pedido-bar-name">${p.barNombre}</div>
+            <div>
+              <div class="qty-label">Churros</div>
+              <input class="qty-input" type="number" min="0" value="${p.churros || ""}" placeholder="0" data-fi="${fi}" data-pi="${pi}" data-field="churros">
+            </div>
+            <div>
+              <div class="qty-label">Porras</div>
+              <input class="qty-input" type="number" min="0" value="${p.porras || ""}" placeholder="0" data-fi="${fi}" data-pi="${pi}" data-field="porras">
+            </div>
+            <button class="btn btn-danger btn-sm" style="padding:10px;min-height:44px;min-width:44px" data-del-pedido data-fi="${fi}" data-pi="${pi}">✕</button>
+          </div>`;
+        } else {
+          return `
+          <div class="pedido-row" style="cursor:pointer;opacity:${p.entregado ? "0.5" : "1"};padding:14px 0;transition:all 0.2s" data-toggle-entregado data-fi="${fi}" data-pi="${pi}">
+            <div class="pedido-bar-name" style="text-decoration:${p.entregado ? "line-through" : "none"};font-size:1.15rem">${p.barNombre}</div>
+            <div style="text-align:center;width:64px;margin-right:8px">
+              <div style="font-size:1.35rem;font-weight:900;color:var(--gold);line-height:1.1">${p.churros || 0}</div>
+              <div class="qty-label" style="font-size:0.7rem">Churros</div>
+            </div>
+            <div style="text-align:center;width:64px;margin-right:8px">
+              <div style="font-size:1.35rem;font-weight:900;color:var(--gold);line-height:1.1">${p.porras || 0}</div>
+              <div class="qty-label" style="font-size:0.7rem">Porras</div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:center;width:44px;color:${p.entregado ? "var(--success)" : "var(--surface2)"}">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </div>
+          </div>`;
+        }
+      })
       .join("");
 
     return `<div class="franja-block" data-fi="${fi}">
       <div class="franja-header">
-        <input class="form-input franja-hora" type="time" value="${f.hora}" data-fi="${fi}" style="width:120px;min-height:46px;font-size:1.2rem;font-weight:900;color:var(--gold);padding:10px 8px">
+        ${
+          isEditMode
+            ? `<div class="form-input franja-hora" data-fi="${fi}" style="width:90px;min-height:46px;font-size:1.2rem;font-weight:900;color:var(--gold);padding:10px 4px;display:flex;align-items:center;justify-content:center;cursor:pointer">${f.hora}</div>`
+            : `<div style="font-size:1.45rem;font-weight:900;color:var(--gold);flex:0 0 auto;min-width:70px">${f.hora}</div>`
+        }
         <div class="franja-info">${f.pedidos.length} bar${f.pedidos.length !== 1 ? "es" : ""}</div>
-        <button class="btn btn-outline btn-sm" data-add-bar="${fi}">+ Bar</button>
-        <button class="btn btn-danger btn-sm" style="padding:10px;min-height:44px;min-width:44px" data-del-franja="${fi}">🗑️</button>
+        ${
+          isEditMode
+            ? `<button class="btn btn-outline btn-sm" data-add-bar="${fi}">+ Bar</button>
+        <button class="btn btn-danger btn-sm" style="padding:10px;min-height:44px;min-width:44px" data-del-franja="${fi}">✕</button>`
+            : ""
+        }
       </div>
-      <div class="franja-body">${pedidosHTML.length ? pedidosHTML : '<div style="color:var(--text-muted);text-align:center;padding:12px;font-size:0.9rem">Añade bares a esta franja</div>'}</div>
+      <div class="franja-body" style="${!isEditMode && pedidosHTML.length ? "padding-top:0" : ""}">${pedidosHTML.length ? pedidosHTML : isEditMode ? '<div style="color:var(--text-muted);text-align:center;padding:12px;font-size:0.9rem">Añade bares a esta franja</div>' : '<div style="color:var(--text-muted);text-align:center;padding:12px;font-size:0.9rem">Sin repartos previstos</div>'}</div>
     </div>`;
   }
 
@@ -312,10 +413,12 @@ export async function renderReparto(container, params = {}) {
 
     // Hora input
     container.querySelectorAll(".franja-hora").forEach((inp) => {
-      inp.addEventListener("change", () => {
-        franjas[+inp.dataset.fi].hora = inp.value;
-        franjas.sort((a, b) => a.hora.localeCompare(b.hora));
-        render();
+      inp.addEventListener("click", () => {
+        showTimePicker(franjas[+inp.dataset.fi].hora, (newTime) => {
+          franjas[+inp.dataset.fi].hora = newTime;
+          franjas.sort((a, b) => a.hora.localeCompare(b.hora));
+          render();
+        });
       });
     });
 
@@ -330,6 +433,21 @@ export async function renderReparto(container, params = {}) {
       });
     });
 
+    // Toggle entregado
+    container.querySelectorAll("[data-toggle-entregado]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        if (isEditMode) return;
+        const fi = +btn.dataset.fi,
+          pi = +btn.dataset.pi;
+        if (franjas[fi] && franjas[fi].pedidos[pi]) {
+          franjas[fi].pedidos[pi].entregado =
+            !franjas[fi].pedidos[pi].entregado;
+          await saveReparto(fechaActual, franjas); // Auto-save when testing status
+          render();
+        }
+      });
+    });
+
     // Delete franja
     container.querySelectorAll("[data-del-franja]").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -338,15 +456,46 @@ export async function renderReparto(container, params = {}) {
       });
     });
 
+    // Edit Mode toggles
+    const btnToggle = document.getElementById("btn-toggle-edit");
+    if (btnToggle)
+      btnToggle.addEventListener("click", () => {
+        isEditMode = true;
+        render();
+      });
+
+    const btnCancel = document.getElementById("btn-cancel-edit");
+    if (btnCancel)
+      btnCancel.addEventListener("click", async () => {
+        await loadFranjas();
+        render();
+      });
+
+    // Copy franjas
+    const btnCopy = document.getElementById("btn-copy-reparto");
+    if (btnCopy) {
+      btnCopy.addEventListener("click", showCopySelector);
+    }
+
     // Add franja
     const btnAddF = document.getElementById("btn-add-franja");
     if (btnAddF)
       btnAddF.addEventListener("click", () => {
         franjas.push({ hora: "06:00", pedidos: [] });
+        franjas.sort((a, b) => a.hora.localeCompare(b.hora));
+        isEditMode = true;
         render();
         setTimeout(() => {
-          const inputs = container.querySelectorAll(".franja-hora");
-          if (inputs.length) inputs[inputs.length - 1].focus();
+          showTimePicker("06:00", (newTime) => {
+            const index = franjas.findIndex(
+              (f) => f.hora === "06:00" && f.pedidos.length === 0,
+            );
+            if (index !== -1) {
+              franjas[index].hora = newTime;
+              franjas.sort((a, b) => a.hora.localeCompare(b.hora));
+              render();
+            }
+          });
         }, 100);
       });
 
@@ -367,18 +516,39 @@ export async function renderReparto(container, params = {}) {
             franjas[fi].pedidos[pi][inp.dataset.field] = Number(inp.value) || 0;
         });
         await saveReparto(fechaActual, franjas);
+        isEditMode = false;
+        render();
         toast("✅ Reparto guardado", "success");
       });
 
     // Delete reparto
     const btnB = document.getElementById("btn-borrar");
     if (btnB)
-      btnB.addEventListener("click", async () => {
-        if (!confirm("¿Borrar todo el reparto de este día?")) return;
-        await deleteReparto(fechaActual);
-        franjas = [];
-        render();
-        toast("🗑️ Reparto borrado");
+      btnB.addEventListener("click", () => {
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+        overlay.innerHTML = `
+          <div class="modal-box" style="text-align:center;max-width:400px">
+            <div class="modal-title" style="justify-content:center;color:var(--danger)">⚠️ Eliminar reparto</div>
+            <p style="margin:20px 0;color:var(--text);font-size:1rem">¿Seguro que quieres eliminar TODO el reparto del día?</p>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-secondary" style="flex:1" id="btn-confirm-cancel">✕ Cancelar</button>
+              <button class="btn btn-danger" style="flex:1" id="btn-confirm-delete">🗑️ Eliminar</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+
+        document.getElementById("btn-confirm-cancel").onclick = () =>
+          document.body.removeChild(overlay);
+        document.getElementById("btn-confirm-delete").onclick = async () => {
+          document.body.removeChild(overlay);
+          await deleteReparto(fechaActual);
+          franjas = [];
+          isEditMode = true;
+          render();
+          toast("🗑️ Reparto borrado");
+        };
       });
   }
 
@@ -388,12 +558,12 @@ export async function renderReparto(container, params = {}) {
     overlay.className = "modal-overlay";
     overlay.innerHTML = `
       <div class="modal-box">
-        <div class="modal-title">
-          🏪 Seleccionar bar
-          <button class="modal-close" id="modal-close-btn">✕</button>
+        <div class="modal-title" style="display:flex;align-items:center;gap:8px">
+          ${iconBarUI(24)} Seleccionar bar
+          <button class="modal-close" style="margin-left:auto" id="modal-close-btn">✕</button>
         </div>
         <div class="search-bar">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
           <input class="form-input" id="bar-search" placeholder="Buscar bar..." autocomplete="off">
         </div>
         <div class="bar-select-list" id="bar-select-list">
@@ -424,26 +594,17 @@ export async function renderReparto(container, params = {}) {
         item.addEventListener("click", () => {
           const bid = Number(item.dataset.barId);
           const bname = item.dataset.barNombre;
-          if (existingIds.has(bid)) {
-            // remove
-            const idx = franjas[fi].pedidos.findIndex((p) => p.barId === bid);
-            if (idx !== -1) franjas[fi].pedidos.splice(idx, 1);
-            existingIds.delete(bid);
-          } else {
+          if (!existingIds.has(bid)) {
             franjas[fi].pedidos.push({
               barId: bid,
               barNombre: bname,
               churros: 0,
               porras: 0,
+              entregado: false,
             });
-            existingIds.add(bid);
           }
-          item.classList.toggle("selected");
-          item.querySelector(".bar-select-check").textContent = existingIds.has(
-            bid,
-          )
-            ? "✓"
-            : "";
+          document.body.removeChild(overlay);
+          render();
         });
       });
     }
@@ -479,10 +640,74 @@ export async function renderReparto(container, params = {}) {
           barNombre: nombre.trim(),
           churros: 0,
           porras: 0,
+          entregado: false,
         });
-        existingIds.add(id);
-        renderBarList();
+        document.body.removeChild(overlay);
+        render();
       });
+  }
+
+  async function showCopySelector() {
+    const todos = await getAllRepartos();
+    const filtrados = todos.filter((r) => r.fecha !== fechaActual);
+
+    if (filtrados.length === 0) {
+      toast("No hay otros días para copiar", "error");
+      return;
+    }
+
+    const overlay = document.createElement("div");
+    overlay.className = "modal-overlay";
+
+    let listHTML = filtrados
+      .slice(0, 15)
+      .map((r) => {
+        const tot = calcTotales(r.franjas);
+        return `<div class="bar-select-item" data-copiar-fecha="${r.fecha}">
+        <div style="font-size:1rem;font-weight:700">📋 ${formatFechaMediana(r.fecha)}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted)">${tot.bares} bares · ${tot.churros} churros · ${tot.porras} porras</div>
+      </div>`;
+      })
+      .join("");
+
+    overlay.innerHTML = `
+      <div class="modal-box">
+        <div class="modal-title" style="display:flex;align-items:center;gap:8px">
+          📋 Copiar de otro día
+          <button class="modal-close" style="margin-left:auto" id="modal-close-copy">✕</button>
+        </div>
+        <div style="margin-bottom:12px;font-size:0.9rem;color:var(--text)">Selecciona un día anterior para copiar la ruta.</div>
+        <div class="bar-select-list" style="max-height:60vh;overflow-y:auto">
+          ${listHTML}
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    document
+      .getElementById("modal-close-copy")
+      .addEventListener("click", () => {
+        document.body.removeChild(overlay);
+      });
+
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay) document.body.removeChild(overlay);
+    });
+
+    overlay.querySelectorAll("[data-copiar-fecha]").forEach((item) => {
+      item.addEventListener("click", () => {
+        const rep = filtrados.find((r) => r.fecha === item.dataset.copiarFecha);
+        if (rep) {
+          franjas = JSON.parse(JSON.stringify(rep.franjas));
+          franjas.forEach((f) =>
+            f.pedidos.forEach((p) => (p.entregado = false)),
+          );
+          render();
+          toast("✅ Reparto copiado", "success");
+        }
+        document.body.removeChild(overlay);
+      });
+    });
   }
 
   render();
@@ -575,7 +800,7 @@ export async function renderCalendario(container) {
             <span class="empty-icon">📭</span>
             <p>Sin reparto este día</p>
           </div>
-          <button class="btn btn-primary btn-full" id="btn-go-reg">✏️ Registrar reparto</button>
+          <button class="btn btn-primary btn-full" id="btn-go-reg" style="display:flex;align-items:center;justify-content:center;gap:8px">${iconEdit(20)} Registrar reparto</button>
         </div>`;
       document
         .getElementById("btn-go-reg")
@@ -596,20 +821,20 @@ export async function renderCalendario(container) {
           .map(
             (f) => `
           <div style="margin-bottom:12px">
-            <div style="font-size:1rem;font-weight:800;color:var(--gold);margin-bottom:8px">⏰ ${f.hora}</div>
+            <div style="font-size:1rem;font-weight:800;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:4px">${iconClock(18)} ${f.hora}</div>
             ${f.pedidos
               .map(
                 (p) => `
               <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg2);border-radius:10px;margin-bottom:6px;border:1px solid var(--surface2)">
                 <span style="font-weight:700;font-size:1rem">${p.barNombre}</span>
-                <span style="color:var(--text-muted);font-size:0.9rem;font-weight:600">${p.churros > 0 ? churroLabel(p.churros, 16) : ""}${p.churros > 0 && p.porras > 0 ? " · " : ""}${p.porras > 0 ? porraLabel(p.porras, 16) : ""}</span>
+                <span style="color:var(--text-muted);font-size:0.9rem;font-weight:600">${p.churros > 0 ? churroLabel(p.churros, 14) : ""}${p.churros > 0 && p.porras > 0 ? " · " : ""}${p.porras > 0 ? porraLabel(p.porras, 14) : ""}</span>
               </div>`,
               )
               .join("")}
           </div>`,
           )
           .join("")}
-        <button class="btn btn-outline btn-full" id="btn-go-edit">✏️ Editar reparto</button>
+        <button class="btn btn-outline btn-full" id="btn-go-edit" style="display:flex;align-items:center;justify-content:center;gap:8px">${iconEdit(20)} Editar reparto</button>
       </div>`;
     document
       .getElementById("btn-go-edit")
@@ -633,16 +858,16 @@ export async function renderBares(container) {
       <button class="btn btn-primary btn-full" id="btn-nuevo-bar" style="margin-bottom:16px">
         <span class="btn-icon">＋</span> Añadir bar nuevo
       </button>
-      <div class="search-bar">
-        <span class="search-icon">🔍</span>
-        <input class="form-input" id="bar-search" placeholder="Buscar bar..." value="${searchTerm}">
+      <div class="search-bar" style="margin-bottom:16px">
+        <span class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+        <input class="form-input" id="bar-search-main" placeholder="Buscar nombre o nota..." autocomplete="off">
       </div>
       ${
         filtered.length === 0
           ? `
         <div class="empty-state">
-          <span class="empty-icon">🏪</span>
-          <p>${bares.length === 0 ? 'Aún no hay bares.<br>Pulsa "Añadir bar nuevo".' : "Sin resultados."}</p>
+          <div style="margin-bottom:12px;color:var(--text-muted)">${iconBarUI(48)}</div>
+          <p>${bares.length === 0 ? 'Aún no hay bares.<br>Pulsa "Añadir bar nuevo"' : "Sin resultados"}</p>
         </div>`
           : filtered.map((b) => barItemHTML(b)).join("")
       }
@@ -651,10 +876,12 @@ export async function renderBares(container) {
     document
       .getElementById("btn-nuevo-bar")
       .addEventListener("click", () => showBarModal());
-    document.getElementById("bar-search").addEventListener("input", (e) => {
-      searchTerm = e.target.value;
-      render();
-    });
+    document
+      .getElementById("bar-search-main")
+      .addEventListener("input", (e) => {
+        searchTerm = e.target.value;
+        render();
+      });
     container.querySelectorAll("[data-edit-bar]").forEach((btn) => {
       const bar = bares.find((b) => b.id === Number(btn.dataset.editBar));
       btn.addEventListener("click", () => showBarModal(bar));
@@ -665,7 +892,7 @@ export async function renderBares(container) {
         await deleteBar(Number(btn.dataset.delBar));
         bares = bares.filter((b) => b.id !== Number(btn.dataset.delBar));
         render();
-        toast("🗑️ Bar borrado");
+        toast("✕ Bar borrado");
       });
     });
   }
@@ -679,8 +906,8 @@ export async function renderBares(container) {
         ${b.notas ? `<div class="bar-notes">${b.notas}</div>` : ""}
       </div>
       <div class="bar-actions">
-        <button class="btn btn-secondary btn-sm" data-edit-bar="${b.id}">✏️</button>
-        <button class="btn btn-danger btn-sm" data-del-bar="${b.id}" data-name="${b.nombre}">🗑️</button>
+        <button class="btn btn-secondary btn-sm" data-edit-bar="${b.id}" style="padding:10px">${iconEdit(20)}</button>
+        <button class="btn btn-danger btn-sm" data-del-bar="${b.id}" data-name="${b.nombre}">✕</button>
       </div>
     </div>`;
   }
@@ -690,9 +917,9 @@ export async function renderBares(container) {
     overlay.className = "modal-overlay";
     overlay.innerHTML = `
       <div class="modal-box">
-        <div class="modal-title">
-          ${bar ? "✏️ Editar bar" : "🏪 Nuevo bar"}
-          <button class="modal-close" id="modal-close-btn">✕</button>
+        <div class="modal-title" style="display:flex;align-items:center;gap:8px">
+          ${bar ? iconEdit(24) + " Editar bar" : iconBarUI(24) + " Nuevo bar"}
+          <button class="modal-close" style="margin-left:auto" id="modal-close-btn">✕</button>
         </div>
         <div class="form-group">
           <label class="form-label">Nombre del bar</label>
@@ -760,15 +987,15 @@ export async function renderStats(container) {
   const maxTotal = stats.ranking.length ? stats.ranking[0].total : 1;
 
   container.innerHTML = `
-    <div class="section-title">📊 Totales globales</div>
+    <div class="section-title">${iconStats(22)} Totales globales</div>
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-value">${stats.totalRepartos}</div>
-        <div class="stat-label">📋 Repartos</div>
+        <div class="stat-label">${iconVan(18)} Repartos</div>
       </div>
       <div class="stat-card">
         <div class="stat-value">${stats.totalChurros + stats.totalPorras}</div>
-        <div class="stat-label">Total unidades</div>
+        <div class="stat-label">${iconChurro(18)} Total unidades</div>
       </div>
       <div class="stat-card">
         <div class="stat-value">${stats.totalChurros}</div>
@@ -783,13 +1010,18 @@ export async function renderStats(container) {
     ${
       mesesOrden.length > 0
         ? `
-      <div class="section-title">📅 Por mes</div>
+      <div class="section-title">${iconCalendar(22)} Por mes</div>
       ${mesesOrden
         .map((mes) => {
           const [y, m] = mes.split("-");
           return `<div class="bar-item" style="padding:14px 16px">
-          <div class="bar-avatar" style="font-size:1rem;font-weight:800;color:var(--cream)">${MESES[Number(m) - 1].substring(0, 3)}<br><span style="font-size:0.7rem">${y}</span></div>
-          <div class="bar-info">
+          <div class="bar-avatar" style="color:var(--cream);min-width:65px">
+             <div style="text-align:center;line-height:1.15">
+               <div style="font-size:1.05rem;font-weight:900">${MESES[Number(m) - 1].substring(0, 3)}</div>
+               <div style="font-size:0.75rem;font-weight:700;color:var(--gold-d)">${y}</div>
+             </div>
+          </div>
+          <div class="bar-info" style="margin-left:4px">
             <div class="bar-name">${porMes[mes].dias} días de reparto</div>
             <div class="bar-notes">${iconChurro(14)} ${porMes[mes].churros} churros · ${iconPorra(14)} ${porMes[mes].porras} porras</div>
           </div>
@@ -803,7 +1035,7 @@ export async function renderStats(container) {
     ${
       stats.ranking.length > 0
         ? `
-      <div class="section-title">🏆 Ranking de bares</div>
+      <div class="section-title">Ranking de bares</div>
       ${stats.ranking
         .slice(0, 10)
         .map((b, i) => {
@@ -829,7 +1061,7 @@ export async function renderStats(container) {
       stats.totalRepartos === 0
         ? `
       <div class="empty-state">
-        <span class="empty-icon">📊</span>
+        <div style="margin-bottom:12px;color:var(--text-muted)">${iconStats(48)}</div>
         <p>Aún no hay datos.<br>Registra tu primer reparto.</p>
       </div>`
         : ""
