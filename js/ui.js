@@ -1045,7 +1045,7 @@ export async function renderStats(container) {
         .map((mes) => {
           const [y, m] = mes.split("-");
           return `<div class="bar-item" style="padding:14px 16px">
-          <div class="bar-avatar" style="color:var(--cream);min-width:65px">
+          <div class="bar-avatar" style="color:var(--cream);min-width:65px;min-height:65px">
              <div style="text-align:center;line-height:1.15">
                <div style="font-size:1.05rem;font-weight:900">${MESES[Number(m) - 1].substring(0, 3)}</div>
                <div style="font-size:0.75rem;font-weight:700;color:var(--gold-d)">${y}</div>
