@@ -32,11 +32,11 @@
   --radius-sm: 6px;
   --shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
   --font: "Outfit", sans-serif;
-  --nav-h: 76px;
+  --nav-h: 86px;
 }
 
 html {
-  font-size: 16px;
+  font-size: 20px;
   -webkit-text-size-adjust: 100%;
 }
 body {
@@ -60,7 +60,7 @@ body {
 }
 
 .top-bar {
-  position: sticky;
+  position: fixed;
   top: 0;
   z-index: 100;
   background: var(--bg2);
@@ -105,6 +105,7 @@ body {
 .page-content {
   flex: 1;
   padding: 16px;
+  padding-top: calc(60px + 16px);
   padding-bottom: calc(var(--nav-h) + 16px);
   overflow-y: auto;
   overflow-x: clip; /* allow children to have their own horizontal scroll */
