@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="40%" r="55%">
+      <stop offset="0%" stop-color="#FCD34D"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </radialGradient>
+    <radialGradient id="outerRing" cx="50%" cy="50%" r="50%">
+      <stop offset="85%" stop-color="transparent"/>
+      <stop offset="100%" stop-color="#78350F" stop-opacity="0.4"/>
+    </radialGradient>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="256" cy="256" r="248" fill="url(#bg)" stroke="#78350F" stroke-width="8"/>
+  <circle cx="256" cy="256" r="248" fill="url(#outerRing)"/>
+
+  <!-- Churro 1 (left, tilted) -->
+  <g transform="translate(256,256) rotate(-30)">
+    <rect x="-18" y="-110" width="36" height="160" rx="18" fill="#78350F"/>
+    <rect x="-14" y="-106" width="28" height="152" rx="14" fill="#D4761A"/>
+    <!-- ridges -->
+    <rect x="-14" y="-90" width="28" height="8" rx="4" fill="#78350F" opacity="0.4"/>
+    <rect x="-14" y="-70" width="28" height="8" rx="4" fill="#78350F" opacity="0.4"/>
+    <rect x="-14" y="-50" width="28" height="8" rx="4" fill="#78350F" opacity="0.4"/>
+    <rect x="-14" y="-30" width="28" height="8" rx="4" fill="#78350F" opacity="0.4"/>
+    <rect x="-14" y="-10" width="28" height="8" rx="4" fill="#78350F" opacity="0.4"/>
+    <!-- sugar -->
+    <rect x="-14" y="-106" width="28" height="152" rx="14" fill="white" opacity="0.15"/>
+  </g>
+  <!-- Churro 2 (center, straight) -->
+  <g transform="translate(256,256)">
+    <rect x="-20" y="-125" width="40" height="180" rx="20" fill="#92400E"/>
+    <rect x="-15" y="-120" width="30" height="170" rx="15" fill="#F59E0B"/>
+    <!-- ridges -->
+    <rect x="-15" y="-100" width="30" height="9" rx="4" fill="#92400E" opacity="0.45"/>
+    <rect x="-15" y="-78" width="30" height="9" rx="4" fill="#92400E" opacity="0.45"/>
+    <rect x="-15" y="-56" width="30" height="9" rx="4" fill="#92400E" opacity="0.45"/>
+    <rect x="-15" y="-34" width="30" height="9" rx="4" fill="#92400E" opacity="0.45"/>
+    <rect x="-15" y="-12" width="30" height="9" rx="4" fill="#92400E" opacity="0.45"/>
+    <rect x="-15" y="10" width="30" height="9" rx="4" fill="#92400E" opacity="0.45"/>
+    <!-- shine -->
+    <rect x="-6" y="-120" width="8" height="170" rx="4" fill="white" opacity="0.2"/>
+  </g>
+  <!-- Churro 3 (right, tilted other way) -->
+  <g transform="translate(256,256) rotate(30)">
+    <rect x="-18" y="-110" width="36" height="160" rx="18" fill="#78350F"/>
+    <rect x="-14" y="-106" width="28" height="152" rx="14" fill="#D4761A"/>
+    <!-- ridges -->
+    <rect x="-14" y="-90" width="28" height="8" rx="4" fill="#78350F" opacity="0.4"/>
+    <rect x="-14" y="-70" width="28" height="8" rx="4" fill="#78350F" opacity="0.4"/>
+    <rect x="-14" y="-50" width="28" height="8" rx="4" fill="#78350F" opacity="0.4"/>
+    <rect x="-14" y="-30" width="28" height="8" rx="4" fill="#78350F" opacity="0.4"/>
+    <rect x="-14" y="-10" width="28" height="8" rx="4" fill="#78350F" opacity="0.4"/>
+    <rect x="-14" y="-106" width="28" height="152" rx="14" fill="white" opacity="0.12"/>
+  </g>
+
+  <!-- Chocolate dip at bottom -->
+  <ellipse cx="256" cy="190" rx="60" ry="18" fill="#5C2D0E" opacity="0.7"/>
+
+  <!-- Sugar sparkles -->
+  <circle cx="180" cy="155" r="5" fill="white" opacity="0.7"/>
+  <circle cx="330" cy="145" r="4" fill="white" opacity="0.6"/>
+  <circle cx="200" cy="130" r="3" fill="white" opacity="0.5"/>
+  <circle cx="310" cy="165" r="3.5" fill="white" opacity="0.5"/>
+  <circle cx="256" cy="125" r="4" fill="white" opacity="0.6"/>
+
+  <!-- App name -->
+  <text x="256" y="345" text-anchor="middle" font-family="Arial Rounded MT Bold, Arial, sans-serif" font-size="48" font-weight="bold" fill="#7C2D12" letter-spacing="1">CHURRERÍA</text>
+  <text x="256" y="390" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#92400E" letter-spacing="3">REPARTO</text>
+</svg>

@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#F59E0B" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Churrería" />
+    <meta
+      name="description"
+      content="App de gestión de repartos de churros y porras"
+    />
+    <title>Churrería Reparto</title>
+
+    <!-- PWA manifest -->
+    <link rel="manifest" href="./manifest.json" />
+
+    <!-- Apple touch icon (inline SVG as data URI for compatibility) -->
+    <link rel="apple-touch-icon" href="./icons/icon-512.svg" />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="./css/app.css" />
+
+    <!-- Preconnect for fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* Install banner */
+      #install-banner {
+        position: fixed;
+        bottom: calc(76px + 8px);
+        left: 50%;
+        transform: translateX(-50%) translateY(120px);
+        width: calc(100% - 32px);
+        max-width: 468px;
+        background: linear-gradient(135deg, #3d1a08, #5c2a00);
+        border: 2px solid #f59e0b;
+        border-radius: 16px;
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        z-index: 400;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+      #install-banner.show {
+        transform: translateX(-50%) translateY(0);
+      }
+      #install-banner .install-text {
+        flex: 1;
+      }
+      #install-banner .install-title {
+        font-weight: 800;
+        font-size: 0.95rem;
+        color: #fef3c7;
+      }
+      #install-banner .install-sub {
+        font-size: 0.78rem;
+        color: #ca8a04;
+        margin-top: 2px;
+      }
+      #install-banner .btn-install {
+        background: #f59e0b;
+        color: #451a03;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 16px;
+        font-family: "Outfit", sans-serif;
+        font-weight: 800;
+        font-size: 0.9rem;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      #install-banner .btn-dismiss {
+        background: transparent;
+        border: none;
+        color: #ca8a04;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <div class="logo-icon">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 512 512"
+            width="42"
+            height="42"
+          >
+            <defs>
+              <radialGradient id="hbg" cx="50%" cy="40%" r="55%">
+                <stop offset="0%" stop-color="#FCD34D" />
+                <stop offset="100%" stop-color="#D97706" />
+              </radialGradient>
+            </defs>
+            <circle
+              cx="256"
+              cy="256"
+              r="248"
+              fill="url(#hbg)"
+              stroke="#78350F"
+              stroke-width="8"
+            />
+            <g transform="translate(256,256) rotate(-28)">
+              <rect
+                x="-13"
+                y="-90"
+                width="26"
+                height="125"
+                rx="13"
+                fill="#D4761A"
+              />
+              <rect
+                x="-13"
+                y="-75"
+                width="26"
+                height="7"
+                rx="3"
+                fill="#78350F"
+                opacity="0.45"
+              />
+              <rect
+                x="-13"
+                y="-58"
+                width="26"
+                height="7"
+                rx="3"
+                fill="#78350F"
+                opacity="0.45"
+              />
+              <rect
+                x="-13"
+                y="-41"
+                width="26"
+                height="7"
+                rx="3"
+                fill="#78350F"
+                opacity="0.45"
+              />
+            </g>
+            <g transform="translate(256,256)">
+              <rect
+                x="-16"
+                y="-108"
+                width="32"
+                height="155"
+                rx="16"
+                fill="#F59E0B"
+              />
+              <rect
+                x="-16"
+                y="-92"
+                width="32"
+                height="8"
+                rx="4"
+                fill="#92400E"
+                opacity="0.5"
+              />
+              <rect
+                x="-16"
+                y="-72"
+                width="32"
+                height="8"
+                rx="4"
+                fill="#92400E"
+                opacity="0.5"
+              />
+              <rect
+                x="-16"
+                y="-52"
+                width="32"
+                height="8"
+                rx="4"
+                fill="#92400E"
+                opacity="0.5"
+              />
+              <rect
+                x="-16"
+                y="-32"
+                width="32"
+                height="8"
+                rx="4"
+                fill="#92400E"
+                opacity="0.5"
+              />
+              <rect
+                x="-6"
+                y="-108"
+                width="7"
+                height="155"
+                rx="3"
+                fill="white"
+                opacity="0.18"
+              />
+            </g>
+            <g transform="translate(256,256) rotate(28)">
+              <rect
+                x="-13"
+                y="-90"
+                width="26"
+                height="125"
+                rx="13"
+                fill="#D4761A"
+              />
+              <rect
+                x="-13"
+                y="-75"
+                width="26"
+                height="7"
+                rx="3"
+                fill="#78350F"
+                opacity="0.45"
+              />
+              <rect
+                x="-13"
+                y="-58"
+                width="26"
+                height="7"
+                rx="3"
+                fill="#78350F"
+                opacity="0.45"
+              />
+              <rect
+                x="-13"
+                y="-41"
+                width="26"
+                height="7"
+                rx="3"
+                fill="#78350F"
+                opacity="0.45"
+              />
+            </g>
+          </svg>
+        </div>
+        <div>
+          <h1>Churrería</h1>
+          <div class="subtitle">Reparto de churros</div>
+        </div>
+        <div class="date-chip" id="top-date"></div>
+      </header>
+
+      <!-- Page Content -->
+      <main class="page-content" id="page-content">
+        <div
+          style="
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+          "
+        >
+          <div style="margin-bottom: 16px">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 48 48"
+              width="60"
+              height="60"
+              style="display: inline-block"
+            >
+              <defs>
+                <linearGradient id="cgL" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#92400E" />
+                  <stop offset="30%" stop-color="#F59E0B" />
+                  <stop offset="70%" stop-color="#D97706" />
+                  <stop offset="100%" stop-color="#78350F" />
+                </linearGradient>
+              </defs>
+              <g transform="translate(24,24) rotate(-20) translate(-24,-24)">
+                <rect
+                  x="19"
+                  y="4"
+                  width="12"
+                  height="40"
+                  rx="6"
+                  fill="#3D1A08"
+                  opacity="0.35"
+                />
+                <rect
+                  x="18"
+                  y="3"
+                  width="12"
+                  height="40"
+                  rx="6"
+                  fill="url(#cgL)"
+                />
+                <rect
+                  x="18"
+                  y="3"
+                  width="4"
+                  height="40"
+                  rx="4"
+                  fill="white"
+                  opacity="0.2"
+                />
+                <rect
+                  x="18"
+                  y="10"
+                  width="12"
+                  height="3"
+                  rx="1.5"
+                  fill="#78350F"
+                  opacity="0.5"
+                />
+                <rect
+                  x="18"
+                  y="17"
+                  width="12"
+                  height="3"
+                  rx="1.5"
+                  fill="#78350F"
+                  opacity="0.5"
+                />
+                <rect
+                  x="18"
+                  y="24"
+                  width="12"
+                  height="3"
+                  rx="1.5"
+                  fill="#78350F"
+                  opacity="0.5"
+                />
+                <rect
+                  x="18"
+                  y="31"
+                  width="12"
+                  height="3"
+                  rx="1.5"
+                  fill="#78350F"
+                  opacity="0.5"
+                />
+                <rect
+                  x="18"
+                  y="38"
+                  width="12"
+                  height="3"
+                  rx="1.5"
+                  fill="#78350F"
+                  opacity="0.5"
+                />
+                <circle cx="22" cy="8" r="1.2" fill="white" opacity="0.7" />
+                <circle cx="27" cy="15" r="1" fill="white" opacity="0.6" />
+                <circle cx="21" cy="22" r="1.2" fill="white" opacity="0.65" />
+                <circle cx="26" cy="29" r="1" fill="white" opacity="0.6" />
+                <circle cx="22" cy="35" r="1.1" fill="white" opacity="0.7" />
+              </g>
+            </svg>
+          </div>
+          <div style="font-size: 1rem; font-weight: 600">Cargando...</div>
+        </div>
+      </main>
+
+      <!-- Bottom Navigation -->
+      <nav class="bottom-nav" id="bottom-nav"></nav>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Install Banner -->
+    <div id="install-banner">
+      <span style="font-size: 2rem">📲</span>
+      <div class="install-text">
+        <div class="install-title">Instalar app</div>
+        <div class="install-sub">Accede sin internet desde el móvil</div>
+      </div>
+      <button class="btn-install" id="btn-install">Instalar</button>
+      <button class="btn-dismiss" id="btn-dismiss">✕</button>
+    </div>
+
+    <script type="module" src="./js/app.js"></script>
+    <script>
+      // Top date
+      const now = new Date();
+      const dias = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+      const meses = [
+        "Ene",
+        "Feb",
+        "Mar",
+        "Abr",
+        "May",
+        "Jun",
+        "Jul",
+        "Ago",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dic",
+      ];
+      document.getElementById("top-date").textContent =
+        `${dias[now.getDay()]} ${now.getDate()} ${meses[now.getMonth()]}`;
+
+      // PWA Install Banner
+      let deferredPrompt;
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const banner = document.getElementById("install-banner");
+        if (!sessionStorage.getItem("install-dismissed")) {
+          setTimeout(() => banner.classList.add("show"), 1500);
+        }
+      });
+      document
+        .getElementById("btn-install")
+        .addEventListener("click", async () => {
+          if (!deferredPrompt) return;
+          deferredPrompt.prompt();
+          const { outcome } = await deferredPrompt.userChoice;
+          deferredPrompt = null;
+          document.getElementById("install-banner").classList.remove("show");
+        });
+      document.getElementById("btn-dismiss").addEventListener("click", () => {
+        document.getElementById("install-banner").classList.remove("show");
+        sessionStorage.setItem("install-dismissed", "1");
+      });
+    </script>
+  </body>
+</html>
