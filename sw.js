@@ -1,5 +1,5 @@
 // sw.js — Service Worker para Churrería PWA
-const CACHE_NAME = "churreria-v9";
+const CACHE_NAME = "churreria-v10";
 const ASSETS = [
   "./",
   "./index.html",
