@@ -86,6 +86,52 @@ async function init() {
 
   buildNav();
   await renderCurrentPage();
+  initSwipeNav();
+}
+
+function initSwipeNav() {
+  const TAB_IDS = TABS.map((t) => t.id);
+  let startX = 0,
+    startY = 0,
+    startTarget = null;
+
+  const el = document.getElementById("page-content");
+
+  el.addEventListener(
+    "touchstart",
+    (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      startTarget = e.target;
+    },
+    { passive: true },
+  );
+
+  el.addEventListener(
+    "touchend",
+    (e) => {
+      // Ignore if a modal is open
+      if (document.querySelector(".modal-overlay")) return;
+      // Ignore if swipe started inside a horizontal scroller (day-selector)
+      if (startTarget && startTarget.closest(".day-selector")) return;
+
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+
+      // Must be clearly horizontal (dx > 55px and more horizontal than vertical)
+      if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+
+      const idx = TAB_IDS.indexOf(currentTab);
+      if (dx < 0 && idx < TAB_IDS.length - 1) {
+        // Swipe left → next tab
+        window.App.nav(TAB_IDS[idx + 1]);
+      } else if (dx > 0 && idx > 0) {
+        // Swipe right → previous tab
+        window.App.nav(TAB_IDS[idx - 1]);
+      }
+    },
+    { passive: true },
+  );
 }
 
 document.addEventListener("DOMContentLoaded", init);
