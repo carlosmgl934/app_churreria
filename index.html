@@ -35,64 +35,6 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap"
       rel="stylesheet"
     />
-
-    <style>
-      /* Install banner */
-      #install-banner {
-        position: fixed;
-        bottom: 180px;
-        left: 50%;
-        transform: translateX(-50%) translateY(120px);
-        width: calc(100% - 32px);
-        max-width: 468px;
-        background: linear-gradient(135deg, #1e293b, #334155);
-        border: 1px solid #475569;
-        border-radius: 16px;
-        padding: 14px 16px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        z-index: 400;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
-      #install-banner.show {
-        transform: translateX(-50%) translateY(0);
-      }
-      #install-banner .install-text {
-        flex: 1;
-      }
-      #install-banner .install-title {
-        font-weight: 800;
-        font-size: 0.95rem;
-        color: #f1f5f9;
-      }
-      #install-banner .install-sub {
-        font-size: 0.78rem;
-        color: #94a3b8;
-        margin-top: 2px;
-      }
-      #install-banner .btn-install {
-        background: #f59e0b;
-        color: #0f172a;
-        border: none;
-        border-radius: 10px;
-        padding: 10px 16px;
-        font-family: "Outfit", sans-serif;
-        font-weight: 800;
-        font-size: 0.9rem;
-        cursor: pointer;
-        white-space: nowrap;
-      }
-      #install-banner .btn-dismiss {
-        background: transparent;
-        border: none;
-        color: #94a3b8;
-        font-size: 1.2rem;
-        cursor: pointer;
-        padding: 6px;
-      }
-    </style>
   </head>
   <body>
     <div id="app">
@@ -373,17 +315,6 @@
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
-    <!-- Install Banner -->
-    <div id="install-banner">
-      <span style="font-size: 2rem">📲</span>
-      <div class="install-text">
-        <div class="install-title">Instalar app</div>
-        <div class="install-sub">Accede sin internet desde el móvil</div>
-      </div>
-      <button class="btn-install" id="btn-install">Instalar</button>
-      <button class="btn-dismiss" id="btn-dismiss">✕</button>
-    </div>
-
     <script type="module" src="./js/app.js"></script>
     <script>
       // Top date
@@ -405,38 +336,6 @@
       ];
       document.getElementById("top-date").textContent =
         `${dias[now.getDay()]} ${now.getDate()} ${meses[now.getMonth()]}`;
-
-      // PWA Install Banner
-      let deferredPrompt;
-      window.addEventListener("beforeinstallprompt", (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        const banner = document.getElementById("install-banner");
-        if (!sessionStorage.getItem("install-dismissed")) {
-          setTimeout(() => banner.classList.add("show"), 1500);
-        }
-      });
-      document
-        .getElementById("btn-install")
-        .addEventListener("click", async () => {
-          if (!deferredPrompt) {
-            document.getElementById("install-banner").classList.remove("show");
-            const t = document.getElementById("toast");
-            t.textContent = "️Navegador no compatible";
-            t.className = "toast show";
-            clearTimeout(t._t);
-            t._t = setTimeout(() => (t.className = "toast"), 3000);
-            return;
-          }
-          deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-          deferredPrompt = null;
-          document.getElementById("install-banner").classList.remove("show");
-        });
-      document.getElementById("btn-dismiss").addEventListener("click", () => {
-        document.getElementById("install-banner").classList.remove("show");
-        sessionStorage.setItem("install-dismissed", "1");
-      });
     </script>
   </body>
 </html>

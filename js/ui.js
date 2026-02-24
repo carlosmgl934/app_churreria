@@ -198,7 +198,7 @@ export async function renderDashboard(container) {
         ? `
       <div class="section-title" style="display:flex;align-items:center;gap:6px">${iconClock(20)} Últimos repartos</div>
       ${allRepartos
-        .slice(0, 4)
+        .slice(0, 5)
         .map((r) => {
           const t = calcTotales(r.franjas);
           return `<div class="bar-item" data-fecha="${r.fecha}" style="cursor:pointer">
@@ -305,10 +305,10 @@ export async function renderReparto(container, params = {}) {
         ${
           isEditMode
             ? `<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
-                 <button class="btn btn-primary" id="btn-guardar" style="display:flex;align-items:center;justify-content:center;gap:6px"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Guardar reparto</button>
+                 <button class="btn btn-primary" id="btn-guardar" style="display:flex;align-items:center;justify-content:center;gap:6px;font-weight:900;font-size:1rem;letter-spacing:0.5px;box-shadow:0 0 18px rgba(245,158,11,0.5)"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> GUARDAR REPARTO</button>
                  <div style="display:flex;gap:10px">
                    <button class="btn btn-secondary" style="flex:1" id="btn-cancel-edit">✕ Cancelar</button>
-                   <button class="btn btn-danger" style="flex:1" id="btn-borrar">🗑️ Eliminar reparto</button>
+                   <button class="btn btn-danger" style="flex:1" id="btn-borrar">ELIMINAR REPARTO</button>
                  </div>
                </div>`
             : ``
@@ -513,15 +513,13 @@ export async function renderReparto(container, params = {}) {
     const btnAddF = document.getElementById("btn-add-franja");
     if (btnAddF)
       btnAddF.addEventListener("click", () => {
-        franjas.push({ hora: "06:00", pedidos: [] });
-        franjas.sort((a, b) => a.hora.localeCompare(b.hora));
+        const sentinel = "__new__";
+        franjas.push({ hora: sentinel, pedidos: [] });
         isEditMode = true;
         render();
         setTimeout(() => {
           showTimePicker("06:00", (newTime) => {
-            const index = franjas.findIndex(
-              (f) => f.hora === "06:00" && f.pedidos.length === 0,
-            );
+            const index = franjas.findIndex((f) => f.hora === sentinel);
             if (index !== -1) {
               franjas[index].hora = newTime;
               franjas.sort((a, b) => a.hora.localeCompare(b.hora));
@@ -829,7 +827,7 @@ export async function renderCalendario(container) {
         <div class="detail-panel">
           <div class="detail-date">${formatFechaLarga(fecha)}</div>
           <div class="empty-state" style="padding:16px 0">
-            <span class="empty-icon">📭</span>
+            <span class="empty-icon" style="display:flex;justify-content:center;color:var(--text-muted)">${iconVan(48)}</span>
             <p>Sin reparto este día</p>
           </div>
           <button class="btn btn-primary btn-full" id="btn-go-reg" style="display:flex;align-items:center;justify-content:center;gap:8px">${iconEdit(20)} Registrar reparto</button>
@@ -1054,7 +1052,7 @@ export async function renderStats(container) {
              </div>
           </div>
           <div class="bar-info" style="margin-left:4px">
-            <div class="bar-name">${porMes[mes].dias} días de reparto</div>
+            <div class="bar-name">${porMes[mes].dias} ${porMes[mes].dias === 1 ? "día" : "días"} de reparto</div>
             <div class="bar-notes">${iconChurro(14)} ${porMes[mes].churros} churros · ${iconPorra(14)} ${porMes[mes].porras} porras</div>
           </div>
         </div>`;
