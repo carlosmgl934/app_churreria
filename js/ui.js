@@ -152,7 +152,7 @@ export async function renderDashboard(container) {
 
   container.innerHTML = `
     <div class="hero-card">
-      <div class="hero-logo">${logoSVG(80)}</div>
+      <div class="hero-logo">${logoSVG(60)}</div>
       <div class="hero-title">Churrería Reparto</div>
       <div class="hero-subtitle">${diaNombre}, ${diaNum} de ${mes}</div>
     </div>
@@ -233,6 +233,7 @@ export async function renderReparto(container, params = {}) {
   let fechaActual = params.fecha || hoy();
   let franjas = [];
   let isEditMode = false;
+  let pickerScroll = null; // preserve scroll position when changing day
 
   async function loadFranjas() {
     const r = await getRepartoByFecha(fechaActual);
@@ -253,11 +254,22 @@ export async function renderReparto(container, params = {}) {
   await loadFranjas();
 
   function render() {
+    // Auto-merge franjas with duplicate hours
+    const fmap = {};
+    franjas.forEach((f) => {
+      if (!fmap[f.hora]) fmap[f.hora] = { hora: f.hora, pedidos: [] };
+      fmap[f.hora].pedidos.push(...f.pedidos);
+    });
+    franjas = Object.values(fmap).sort((a, b) => a.hora.localeCompare(b.hora));
+
     const fecha = parseFecha(fechaActual);
     const totales = calcTotales(franjas);
 
     container.innerHTML = `
-      <div class="section-title">${iconVan(20)} Día del reparto</div>
+      <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <span style="display:flex;align-items:center;gap:6px">${iconVan(18)} Día del reparto</span>
+        <span style="font-size:0.82rem;color:var(--text-muted);font-weight:600;letter-spacing:0;text-transform:none">${MESES[new Date().getMonth()]} ${new Date().getFullYear()}</span>
+      </div>
       <div id="day-picker" style="margin-bottom:4px"></div>
       <div style="text-align:center;font-size:0.85rem;color:var(--text-muted);margin-bottom:16px;font-weight:600">
         ${formatFechaLarga(fechaActual)}
@@ -265,7 +277,7 @@ export async function renderReparto(container, params = {}) {
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
         <div class="section-title" style="margin:0;display:flex;align-items:center;gap:6px">${iconClock(20)} Franjas horarias</div>
-        ${isEditMode ? `<div style="display:flex;gap:6px"><button class="btn btn-sm btn-outline" id="btn-copy-reparto" title="Copiar de otro día">📋 Copiar de...</button><button class="btn btn-sm btn-outline" id="btn-add-franja">+ Añadir franja</button></div>` : `<button class="btn btn-sm btn-outline" id="btn-toggle-edit" style="gap:4px;display:flex;align-items:center">${iconEdit(18)} Editar</button>`}
+        ${isEditMode ? `<div style="display:flex;gap:6px"><button class="btn btn-sm btn-outline" id="btn-copy-reparto" title="Copiar de otro día">Copiar de...</button><button class="btn btn-sm btn-outline" id="btn-add-franja">+ Añadir franja</button></div>` : `<button class="btn btn-sm btn-outline" id="btn-toggle-edit" style="gap:4px;display:flex;align-items:center">${iconEdit(18)} Editar</button>`}
       </div>
 
       <div id="franjas-container">
@@ -284,11 +296,11 @@ export async function renderReparto(container, params = {}) {
         franjas.length > 0
           ? `
         <div style="background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:14px;border:1px solid var(--surface2);display:flex;gap:12px;justify-content:space-around;text-align:center">
-          <div><div style="font-size:1.8rem;font-weight:900;color:var(--gold)">${totales.churros}</div><div style="font-size:0.8rem;color:var(--text-muted);font-weight:700">CHURROS</div></div>
+          <div><div style="font-size:1.5rem;font-weight:800;color:var(--gold)">${totales.churros}</div><div style="font-size:0.75rem;color:var(--text-muted);font-weight:700">CHURROS</div></div>
           <div style="width:1px;background:var(--surface2)"></div>
-          <div><div style="font-size:1.8rem;font-weight:900;color:var(--gold)">${totales.porras}</div><div style="font-size:0.8rem;color:var(--text-muted);font-weight:700">PORRAS</div></div>
+          <div><div style="font-size:1.5rem;font-weight:800;color:var(--gold)">${totales.porras}</div><div style="font-size:0.75rem;color:var(--text-muted);font-weight:700">PORRAS</div></div>
           <div style="width:1px;background:var(--surface2)"></div>
-          <div><div style="font-size:1.8rem;font-weight:900;color:var(--gold)">${totales.bares}</div><div style="font-size:0.8rem;color:var(--text-muted);font-weight:700">BARES</div></div>
+          <div><div style="font-size:1.5rem;font-weight:800;color:var(--gold)">${totales.bares}</div><div style="font-size:0.75rem;color:var(--text-muted);font-weight:700">BARES</div></div>
         </div>
         ${
           isEditMode
@@ -313,29 +325,49 @@ export async function renderReparto(container, params = {}) {
 
   function renderDayPicker() {
     const picker = document.getElementById("day-picker");
-    // Show current week around fechaActual
-    const base = parseFecha(fechaActual);
-    const dow = base.getDay();
-    const weekStart = new Date(base);
-    weekStart.setDate(base.getDate() - dow);
+    const todayStr = hoy();
+    const today = parseFecha(todayStr);
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
     let html = '<div class="day-selector">';
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(weekStart);
-      d.setDate(weekStart.getDate() + i);
-      const ds = fechaStr(d);
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month, d);
+      const ds = fechaStr(date);
       const isActive = ds === fechaActual;
-      const isToday = ds === hoy();
-      html += `<button class="day-btn ${isActive ? "active" : ""}" data-fecha="${ds}" style="${isToday && !isActive ? "border-color:var(--gold-d);" : ""}">
-        <span style="font-size:0.65rem;${isActive ? "" : "color:var(--text-muted)"}">${DIAS_SEMANA[d.getDay()]}</span>
-        <span class="day-num">${d.getDate()}</span>
+      const isToday = ds === todayStr;
+      html += `<button class="day-btn ${isActive ? "active" : ""}" data-fecha="${ds}" style="${isToday && !isActive ? "border-color:var(--gold);" : ""}">
+        <span style="font-size:0.65rem;${isActive ? "" : "color:var(--text-muted)"}">${DIAS_SEMANA[date.getDay()]}</span>
+        <span class="day-num">${d}</span>
       </button>`;
     }
     html += "</div>";
     picker.innerHTML = html;
 
+    // Restore saved scroll or center on today (first load)
+    setTimeout(() => {
+      const selector = picker.querySelector(".day-selector");
+      if (!selector) return;
+      if (pickerScroll !== null) {
+        selector.scrollLeft = pickerScroll;
+        pickerScroll = null;
+      } else {
+        const todayBtn = picker.querySelector(`[data-fecha="${todayStr}"]`);
+        if (todayBtn) {
+          selector.scrollLeft =
+            todayBtn.offsetLeft -
+            selector.clientWidth / 2 +
+            todayBtn.clientWidth / 2;
+        }
+      }
+    }, 10);
+
     picker.querySelectorAll(".day-btn").forEach((btn) => {
       btn.addEventListener("click", async () => {
+        // Save scroll position so it doesn't reset after re-render
+        const sel = picker.querySelector(".day-selector");
+        pickerScroll = sel ? sel.scrollLeft : null;
         fechaActual = btn.dataset.fecha;
         await loadFranjas();
         render();
@@ -358,22 +390,22 @@ export async function renderReparto(container, params = {}) {
               <div class="qty-label">Porras</div>
               <input class="qty-input" type="number" min="0" value="${p.porras || ""}" placeholder="0" data-fi="${fi}" data-pi="${pi}" data-field="porras">
             </div>
-            <button class="btn btn-danger btn-sm" style="padding:10px;min-height:44px;min-width:44px" data-del-pedido data-fi="${fi}" data-pi="${pi}">✕</button>
+            <button style="background:#ef4444;border:none;border-radius:6px;width:28px;height:28px;min-width:28px;color:white;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent" data-del-pedido data-fi="${fi}" data-pi="${pi}">✕</button>
           </div>`;
         } else {
           return `
-          <div class="pedido-row" style="cursor:pointer;opacity:${p.entregado ? "0.5" : "1"};padding:14px 0;transition:all 0.2s" data-toggle-entregado data-fi="${fi}" data-pi="${pi}">
-            <div class="pedido-bar-name" style="text-decoration:${p.entregado ? "line-through" : "none"};font-size:1.15rem">${p.barNombre}</div>
-            <div style="text-align:center;width:64px;margin-right:8px">
-              <div style="font-size:1.35rem;font-weight:900;color:var(--gold);line-height:1.1">${p.churros || 0}</div>
+          <div class="pedido-row" style="cursor:pointer;padding:10px 8px;border-radius:6px;margin:2px 0;transition:all 0.2s;background:${p.entregado ? "rgba(34,197,94,0.1)" : "transparent"};border-left:3px solid ${p.entregado ? "var(--success)" : "transparent"}" data-toggle-entregado data-fi="${fi}" data-pi="${pi}">
+            <div class="pedido-bar-name" style="text-decoration:${p.entregado ? "line-through" : "none"};font-size:1.05rem;color:${p.entregado ? "var(--text-muted)" : "var(--text)"};transition:all 0.2s">${p.barNombre}</div>
+            <div style="text-align:center;width:64px;margin-right:8px;opacity:${p.entregado ? "0.45" : "1"}">
+              <div style="font-size:1.15rem;font-weight:800;color:var(--gold);line-height:1.1">${p.churros || 0}</div>
               <div class="qty-label" style="font-size:0.7rem">Churros</div>
             </div>
-            <div style="text-align:center;width:64px;margin-right:8px">
-              <div style="font-size:1.35rem;font-weight:900;color:var(--gold);line-height:1.1">${p.porras || 0}</div>
+            <div style="text-align:center;width:64px;margin-right:8px;opacity:${p.entregado ? "0.45" : "1"}">
+              <div style="font-size:1.15rem;font-weight:800;color:var(--gold);line-height:1.1">${p.porras || 0}</div>
               <div class="qty-label" style="font-size:0.7rem">Porras</div>
             </div>
             <div style="display:flex;align-items:center;justify-content:center;width:44px;color:${p.entregado ? "var(--success)" : "var(--surface2)"}">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </div>
           </div>`;
         }
@@ -385,13 +417,13 @@ export async function renderReparto(container, params = {}) {
         ${
           isEditMode
             ? `<div class="form-input franja-hora" data-fi="${fi}" style="width:90px;min-height:46px;font-size:1.2rem;font-weight:900;color:var(--gold);padding:10px 4px;display:flex;align-items:center;justify-content:center;cursor:pointer">${f.hora}</div>`
-            : `<div style="font-size:1.45rem;font-weight:900;color:var(--gold);flex:0 0 auto;min-width:70px">${f.hora}</div>`
+            : `<div style="font-size:1.2rem;font-weight:700;color:var(--gold);flex:0 0 auto;min-width:70px">${f.hora}</div>`
         }
         <div class="franja-info">${f.pedidos.length} bar${f.pedidos.length !== 1 ? "es" : ""}</div>
         ${
           isEditMode
             ? `<button class="btn btn-outline btn-sm" data-add-bar="${fi}">+ Bar</button>
-        <button class="btn btn-danger btn-sm" style="padding:10px;min-height:44px;min-width:44px" data-del-franja="${fi}">✕</button>`
+        <button style="background:none;border:none;color:var(--danger);font-family:var(--font);font-size:0.78rem;font-weight:700;cursor:pointer;padding:6px 10px;border-radius:6px;white-space:nowrap;-webkit-tap-highlight-color:transparent;border:1px solid rgba(239,68,68,0.3);letter-spacing:0" data-del-franja="${fi}">🗑 Eliminar franja</button>`
             : ""
         }
       </div>
@@ -983,7 +1015,7 @@ export async function renderStats(container) {
     porMes[mes].porras += t.porras;
     porMes[mes].dias++;
   });
-  const mesesOrden = Object.keys(porMes).sort().reverse().slice(0, 6);
+  const mesesOrden = Object.keys(porMes).sort().reverse().slice(0, 3);
   const maxTotal = stats.ranking.length ? stats.ranking[0].total : 1;
 
   container.innerHTML = `
@@ -1037,7 +1069,7 @@ export async function renderStats(container) {
         ? `
       <div class="section-title">Ranking de bares</div>
       ${stats.ranking
-        .slice(0, 10)
+        .slice(0, 3)
         .map((b, i) => {
           const posClass =
             i === 0 ? "gold" : i === 1 ? "silver" : i === 2 ? "bronze" : "";
@@ -1046,7 +1078,7 @@ export async function renderStats(container) {
           <div class="ranking-pos ${posClass}">${i + 1}</div>
           <div class="ranking-info">
             <div class="ranking-name">${b.nombre}</div>
-            <div class="ranking-nums">${churroLabel(b.churros, 14)} · ${porraLabel(b.porras, 14)} · ${b.dias} días</div>
+            <div class="ranking-nums">${churroLabel(b.churros, 14)} · ${porraLabel(b.porras, 14)}</div>
             <div class="ranking-bar"><div class="ranking-bar-fill" style="width:${pct}%"></div></div>
           </div>
           <div style="font-size:1.4rem;font-weight:900;color:var(--gold)">${b.total}</div>

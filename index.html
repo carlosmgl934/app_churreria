@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <meta name="theme-color" content="#F59E0B" />
+    <meta name="theme-color" content="#0f172a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
@@ -45,8 +45,8 @@
         transform: translateX(-50%) translateY(120px);
         width: calc(100% - 32px);
         max-width: 468px;
-        background: linear-gradient(135deg, #3d1a08, #5c2a00);
-        border: 2px solid #f59e0b;
+        background: linear-gradient(135deg, #1e293b, #334155);
+        border: 1px solid #475569;
         border-radius: 16px;
         padding: 14px 16px;
         display: flex;
@@ -65,16 +65,16 @@
       #install-banner .install-title {
         font-weight: 800;
         font-size: 0.95rem;
-        color: #fef3c7;
+        color: #f1f5f9;
       }
       #install-banner .install-sub {
         font-size: 0.78rem;
-        color: #ca8a04;
+        color: #94a3b8;
         margin-top: 2px;
       }
       #install-banner .btn-install {
         background: #f59e0b;
-        color: #451a03;
+        color: #0f172a;
         border: none;
         border-radius: 10px;
         padding: 10px 16px;
@@ -87,7 +87,7 @@
       #install-banner .btn-dismiss {
         background: transparent;
         border: none;
-        color: #ca8a04;
+        color: #94a3b8;
         font-size: 1.2rem;
         cursor: pointer;
         padding: 6px;
@@ -102,8 +102,8 @@
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 512 512"
-            width="42"
-            height="42"
+            width="32"
+            height="32"
           >
             <defs>
               <radialGradient id="hbg" cx="50%" cy="40%" r="55%">
@@ -419,7 +419,15 @@
       document
         .getElementById("btn-install")
         .addEventListener("click", async () => {
-          if (!deferredPrompt) return;
+          if (!deferredPrompt) {
+            document.getElementById("install-banner").classList.remove("show");
+            const t = document.getElementById("toast");
+            t.textContent = "️Navegador no compatible";
+            t.className = "toast show";
+            clearTimeout(t._t);
+            t._t = setTimeout(() => (t.className = "toast"), 3000);
+            return;
+          }
           deferredPrompt.prompt();
           const { outcome } = await deferredPrompt.userChoice;
           deferredPrompt = null;
