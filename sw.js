@@ -1,5 +1,5 @@
 // sw.js — Service Worker para Churrería PWA
-const CACHE_NAME = "churreria-v17";
+const CACHE_NAME = "churreria-v18";
 const ASSETS = [
   "./",
   "./index.html",
@@ -9,8 +9,8 @@ const ASSETS = [
   "./js/ui.js",
   "./js/calendar.js",
   "./manifest.json",
-  "./icons/icon-512.svg",
-  "./icons/icon-192.svg",
+  "./icons/icon-512.png",
+  "./icons/icon-192.png",
   "https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap",
 ];
 
