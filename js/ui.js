@@ -462,7 +462,10 @@ export async function renderReparto(container, params = {}) {
         }
         ${
           isEditMode
-            ? `<button class="btn btn-primary btn-sm" style="font-weight:800;font-size:0.9rem;white-space:nowrap;margin-left:auto" data-add-bar="${fi}">+ Añadir bar</button>`
+            ? `<div style="display:flex;flex-direction:column;gap:4px;margin-left:auto;align-items:flex-end">
+                 <button class="btn btn-primary btn-sm" style="font-weight:800;font-size:0.9rem;white-space:nowrap" data-add-bar="${fi}">+ Añadir bar</button>
+                 <button class="franja-hora" data-fi="${fi}" style="background:transparent;border:none;color:var(--text-muted);font-size:0.6rem;font-weight:550;text-decoration:underline;cursor:pointer;padding:0;letter-spacing:0.5px">editar hora</button>
+               </div>`
             : `<div class="franja-info" style="margin-left:8px">${f.pedidos.length} bar${f.pedidos.length !== 1 ? "es" : ""}</div>`
         }
       </div>
@@ -513,7 +516,6 @@ export async function renderReparto(container, params = {}) {
         const fi = +btn.dataset.fi,
           pi = +btn.dataset.pi;
         franjas[fi].pedidos.splice(pi, 1);
-        if (franjas[fi].pedidos.length === 0) franjas.splice(fi, 1);
         render();
       });
     });
@@ -669,14 +671,26 @@ export async function renderReparto(container, params = {}) {
       const filtered = bares.filter((b) =>
         b.nombre.toLowerCase().includes(filter.toLowerCase()),
       );
+
       list.innerHTML = filtered
-        .map(
-          (b) => `
-        <div class="bar-select-item ${existingIds.has(b.id) ? "selected" : ""}" data-bar-id="${b.id}" data-bar-nombre="${b.nombre}">
-          <div class="bar-select-check">${existingIds.has(b.id) ? "✓" : ""}</div>
-          <div style="font-size:1rem;font-weight:700">${b.nombre}</div>
-        </div>`,
-        )
+        .map((b) => {
+          // Find if this bar is already in other franjas today
+          const assignedFranjas = franjas
+            .filter((f) => f.pedidos.some((p) => p.barId === b.id))
+            .map((f) => f.hora);
+
+          const badgeHTML =
+            assignedFranjas.length > 0
+              ? `<div style="margin-left:auto;font-size:0.75rem;font-weight:700;color:var(--gold);background:rgba(245,158,11,0.15);padding:3px 6px;border-radius:4px">${assignedFranjas.join(", ")}</div>`
+              : "";
+
+          return `
+            <div class="bar-select-item ${existingIds.has(b.id) ? "selected" : ""}" data-bar-id="${b.id}" data-bar-nombre="${b.nombre}">
+              <div class="bar-select-check">${existingIds.has(b.id) ? "✓" : ""}</div>
+              <div style="font-size:1rem;font-weight:700">${b.nombre}</div>
+              ${badgeHTML}
+            </div>`;
+        })
         .join("");
 
       list.querySelectorAll(".bar-select-item").forEach((item) => {
@@ -982,10 +996,7 @@ export async function renderBares(container) {
   let searchTerm = "";
   let editingId = null;
 
-  function render() {
-    const filtered = bares.filter((b) =>
-      b.nombre.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
+  function renderInitial() {
     container.innerHTML = `
       <button class="btn btn-primary btn-full" id="btn-nuevo-bar" style="margin-bottom:16px">
         <span class="btn-icon">＋</span> Añadir bar nuevo
@@ -994,48 +1005,100 @@ export async function renderBares(container) {
         <span class="search-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
         <input class="form-input" id="bar-search-main" placeholder="Buscar nombre o nota..." autocomplete="off">
       </div>
-      ${
-        filtered.length === 0
-          ? `
-        <div class="empty-state">
-          <div style="margin-bottom:12px;color:var(--text-muted)">${iconBarUI(48)}</div>
-          <p>${bares.length === 0 ? 'Aún no hay bares.<br>Pulsa "Añadir bar nuevo"' : "Sin resultados"}</p>
-        </div>`
-          : filtered.map((b) => barItemHTML(b)).join("")
-      }
+      <div id="bar-list-container"></div>
     `;
 
     document
       .getElementById("btn-nuevo-bar")
       .addEventListener("click", () => showBarModal());
+
     document
       .getElementById("bar-search-main")
       .addEventListener("input", (e) => {
         searchTerm = e.target.value;
-        render();
+        renderList();
       });
-    container.querySelectorAll("[data-edit-bar]").forEach((btn) => {
+  }
+
+  function renderList() {
+    const listContainer = document.getElementById("bar-list-container");
+    if (!listContainer) return;
+
+    const filtered = bares.filter(
+      (b) =>
+        b.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (b.notas && b.notas.toLowerCase().includes(searchTerm.toLowerCase())),
+    );
+
+    listContainer.innerHTML =
+      filtered.length === 0
+        ? `
+        <div class="empty-state">
+          <div style="margin-bottom:12px;color:var(--text-muted)">${iconBarUI(48)}</div>
+          <p>${bares.length === 0 ? 'Aún no hay bares.<br>Pulsa "Añadir bar nuevo"' : "Sin resultados"}</p>
+        </div>`
+        : filtered.map((b) => barItemHTML(b)).join("");
+
+    listContainer.querySelectorAll("[data-edit-bar]").forEach((btn) => {
       const bar = bares.find((b) => b.id === Number(btn.dataset.editBar));
       btn.addEventListener("click", () => showBarModal(bar));
     });
     container.querySelectorAll("[data-del-bar]").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        if (!confirm(`¿Borrar "${btn.dataset.name}"?`)) return;
-        await deleteBar(Number(btn.dataset.delBar));
-        bares = bares.filter((b) => b.id !== Number(btn.dataset.delBar));
-        render();
-        toast("✕ Bar borrado");
+      btn.addEventListener("click", () => {
+        const barName = btn.dataset.name;
+        const barId = Number(btn.dataset.delBar);
+        const overlay = document.createElement("div");
+        overlay.className = "modal-overlay";
+        overlay.innerHTML = `
+          <div class="modal-box" style="text-align:center;max-width:400px">
+            <div class="modal-title" style="justify-content:center;color:var(--danger)">⚠️ Eliminar bar</div>
+            <p style="margin:20px 0;color:var(--text);font-size:1rem">¿Seguro que quieres eliminar el bar "<strong>${barName}</strong>"?</p>
+            <div style="display:flex;gap:10px">
+              <button class="btn btn-secondary" style="flex:1" id="btn-confirm-cancel">✕ Cancelar</button>
+              <button class="btn btn-danger" style="flex:1" id="btn-confirm-delete">🗑️ Eliminar</button>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(overlay);
+
+        document.getElementById("btn-confirm-cancel").onclick = () => {
+          document.body.removeChild(overlay);
+        };
+
+        document.getElementById("btn-confirm-delete").onclick = async () => {
+          document.body.removeChild(overlay);
+          await deleteBar(barId);
+          bares = bares.filter((b) => b.id !== barId);
+          renderList();
+          toast("✕ Bar borrado");
+        };
       });
     });
   }
 
+  renderInitial();
   function barItemHTML(b) {
     const initials = b.nombre.charAt(0).toUpperCase();
+
+    // Helper to highlight search term
+    const highlight = (text) => {
+      if (!searchTerm) return text;
+      // Regex to match the search term case-insensitively
+      const regex = new RegExp(`(${searchTerm})`, "gi");
+      return text.replace(
+        regex,
+        `<span style="color:var(--bg);background:var(--gold);padding:0 2px;border-radius:3px">$1</span>`,
+      );
+    };
+
+    const nombreHTML = highlight(b.nombre);
+    const notasHTML = b.notas ? highlight(b.notas) : "";
+
     return `<div class="bar-item">
       <div class="bar-avatar">${initials}</div>
       <div class="bar-info">
-        <div class="bar-name">${b.nombre}</div>
-        ${b.notas ? `<div class="bar-notes">${b.notas}</div>` : ""}
+        <div class="bar-name">${nombreHTML}</div>
+        ${b.notas ? `<div class="bar-notes">${notasHTML}</div>` : ""}
       </div>
       <div class="bar-actions">
         <button class="btn btn-secondary btn-sm" data-edit-bar="${b.id}" style="padding:10px">${iconEdit(20)}</button>
@@ -1093,11 +1156,12 @@ export async function renderBares(container) {
           toast("✅ Bar añadido", "success");
         }
         document.body.removeChild(overlay);
-        render();
+        renderInitial();
       });
   }
 
-  render();
+  renderInitial();
+  renderList();
 }
 
 // ── Estadísticas ──────────────────────────────────────────────────────────────
