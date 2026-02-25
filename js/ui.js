@@ -606,10 +606,17 @@ export async function renderReparto(container, params = {}) {
           if (franjas[fi] && franjas[fi].pedidos[pi])
             franjas[fi].pedidos[pi][inp.dataset.field] = Number(inp.value) || 0;
         });
-        await saveReparto(fechaActual, franjas);
-        isEditMode = false;
-        render();
-        toast("✅ Reparto guardado", "success");
+        if (franjas.length === 0) {
+          await deleteReparto(fechaActual);
+          await loadFranjas();
+          render();
+          toast("🗑️ Día reseteado", "success");
+        } else {
+          await saveReparto(fechaActual, franjas);
+          isEditMode = false;
+          render();
+          toast("✅ Reparto guardado", "success");
+        }
       });
 
     // Delete reparto
@@ -635,8 +642,7 @@ export async function renderReparto(container, params = {}) {
         document.getElementById("btn-confirm-delete").onclick = async () => {
           document.body.removeChild(overlay);
           await deleteReparto(fechaActual);
-          franjas = [];
-          isEditMode = true;
+          await loadFranjas();
           render();
           toast("🗑️ Reparto borrado");
         };
