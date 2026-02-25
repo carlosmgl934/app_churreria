@@ -370,6 +370,11 @@ export async function renderReparto(container, params = {}) {
         // Save scroll position so it doesn't reset after re-render
         const sel = picker.querySelector(".day-selector");
         pickerScroll = sel ? sel.scrollLeft : null;
+        // Optimistic UI: update active state immediately before async load
+        picker
+          .querySelectorAll(".day-btn")
+          .forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
         fechaActual = btn.dataset.fecha;
         await loadFranjas();
         render();
