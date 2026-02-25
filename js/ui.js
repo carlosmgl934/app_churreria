@@ -304,18 +304,18 @@ export async function renderReparto(container, params = {}) {
           <div style="width:1px;background:var(--surface2)"></div>
           <div><div style="font-size:1.5rem;font-weight:800;color:var(--gold)">${totales.bares}</div><div style="font-size:0.75rem;color:var(--text-muted);font-weight:700">BARES</div></div>
         </div>
-        ${
-          isEditMode
-            ? `<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
-                 <button class="btn btn-primary" id="btn-guardar" style="display:flex;align-items:center;justify-content:center;gap:6px;font-weight:900;font-size:1rem;letter-spacing:0.5px;box-shadow:0 0 18px rgba(245,158,11,0.5)"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> GUARDAR REPARTO</button>
-                 <div style="display:flex;gap:10px">
-                   <button class="btn btn-secondary" style="flex:1" id="btn-cancel-edit">✕ Cancelar</button>
-                   <button class="btn btn-danger" style="flex:1" id="btn-borrar">ELIMINAR REPARTO</button>
-                 </div>
-               </div>`
-            : ``
-        }
       `
+          : ``
+      }
+      ${
+        isEditMode
+          ? `<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+               <button class="btn btn-primary" id="btn-guardar" style="display:flex;align-items:center;justify-content:center;gap:6px;font-weight:900;font-size:1rem;letter-spacing:0.5px;box-shadow:0 0 18px rgba(245,158,11,0.5)"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> GUARDAR REPARTO</button>
+               <div style="display:flex;gap:10px">
+                 <button class="btn btn-secondary" style="flex:1" id="btn-cancel-edit">✕ Cancelar</button>
+                 <button class="btn btn-danger" style="flex:1" id="btn-borrar">ELIMINAR REPARTO</button>
+               </div>
+             </div>`
           : ``
       }
     `;
