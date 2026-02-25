@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.netlify.comfy_meerkat_319530.twa",
+        "sha256_cert_fingerprints": ["A2:B2:D3:7E:F9:3A:12:1A:6D:95:F9:49:9F:64:97:84:4E:02:85:82:15:3B:F5:DA:D1:4A:31:89:1F:48:B0:D5"]
+      }
+    }]
