@@ -236,6 +236,7 @@ export async function renderReparto(container, params = {}) {
   let franjas = [];
   let isEditMode = false;
   let hadExistingReparto = false; // true if the current day already had saved data
+  let editSessionActive = false; // true once user has actively entered edit mode this session
   let pickerScroll = null; // preserve scroll position when changing day
 
   async function loadFranjas() {
@@ -255,6 +256,7 @@ export async function renderReparto(container, params = {}) {
       franjas = [];
       isEditMode = true; // Open in edit mode if new day
     }
+    editSessionActive = false; // reset on every day load
   }
   await loadFranjas();
 
@@ -291,7 +293,7 @@ export async function renderReparto(container, params = {}) {
             ? `
           <div class="empty-state">
             <div style="margin-bottom:12px;color:var(--text-muted)">${iconClock(48)}</div>
-            <p>Sin franjas. Pulsa<br>"+ Añadir franja"</p>
+            <p>Sin franjas<br> ${isEditMode ? `Pulsa "+ Añadir franja"` : `Pulsa "Editar"`}</p>
           </div>`
             : franjas.map((f, fi) => renderFranjaHTML(f, fi, bares)).join("")
         }
@@ -311,12 +313,34 @@ export async function renderReparto(container, params = {}) {
           : ``
       }
       ${
-        isEditMode && (franjas.length > 0 || hadExistingReparto)
-          ? `<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
-               <button class="btn btn-primary" id="btn-guardar" style="display:flex;align-items:center;justify-content:center;gap:6px;font-weight:900;font-size:1rem;letter-spacing:0.5px;box-shadow:0 0 18px rgba(245,158,11,0.5)"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> GUARDAR REPARTO</button>
-               <div style="display:flex;gap:10px">
-                 <button class="btn btn-secondary" style="flex:1" id="btn-cancel-edit">✕ Cancelar</button>
-                 <button class="btn btn-danger" style="flex:1" id="btn-borrar">ELIMINAR REPARTO</button>
+        isEditMode &&
+        (franjas.length > 0 || hadExistingReparto || editSessionActive)
+          ? `<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
+               <button class="btn btn-primary" id="btn-guardar" style="
+                 width:100%;min-height:52px;font-size:1rem;font-weight:900;letter-spacing:1px;
+                 text-transform:uppercase;border-radius:12px;
+                 box-shadow:0 2px 10px rgba(245,158,11,0.2);
+                 display:flex;align-items:center;justify-content:center;gap:8px;
+               ">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                 Guardar reparto
+               </button>
+               <div style="display:flex;gap:8px">
+                 <button class="btn" id="btn-cancel-edit" style="
+                   flex:1;min-height:44px;font-size:0.85rem;font-weight:700;border-radius:10px;
+                   background:transparent;color:var(--text-muted);
+                   border:1.5px solid var(--surface2);letter-spacing:0.3px;
+                 ">Cancelar</button>
+                 <button class="btn" id="btn-borrar" style="
+                   flex:1;min-height:44px;font-size:0.8rem;font-weight:700;border-radius:10px;
+                   background:rgba(239,68,68,0.18);color:#ef4444;
+                   border:1.5px solid rgba(239,68,68,0.5);
+                   white-space:nowrap;letter-spacing:0.3px;
+                   display:flex;align-items:center;justify-content:center;gap:5px;
+                 ">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4h6v2"></path></svg>
+                   Eliminar día
+                 </button>
                </div>
              </div>`
           : ``
@@ -522,6 +546,7 @@ export async function renderReparto(container, params = {}) {
     if (btnToggle)
       btnToggle.addEventListener("click", () => {
         isEditMode = true;
+        editSessionActive = true;
         render();
       });
 
@@ -545,6 +570,7 @@ export async function renderReparto(container, params = {}) {
         const sentinel = "__new__";
         franjas.push({ hora: sentinel, pedidos: [] });
         isEditMode = true;
+        editSessionActive = true;
         render();
         setTimeout(() => {
           showTimePicker("06:00", (newTime) => {

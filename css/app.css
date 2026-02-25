@@ -318,6 +318,10 @@ body {
 .day-selector::-webkit-scrollbar {
   display: none;
 }
+/* Smooth flash when day picker rebuilds after day change */
+#day-picker .day-selector {
+  animation: fadeIn 0.12s ease;
+}
 .day-btn {
   flex: 0 0 44px;
   aspect-ratio: 1;
@@ -406,13 +410,14 @@ body {
 }
 .pedido-bar-name {
   flex: 1;
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: "Outfit", sans-serif;
   font-size: 1rem;
   font-weight: 600;
   color: var(--text);
   min-width: 0;
   line-height: 1.2;
   text-transform: capitalize;
+  letter-spacing: 0.01em;
 }
 .qty-input {
   width: 76px;
