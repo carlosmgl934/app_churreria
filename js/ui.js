@@ -235,11 +235,13 @@ export async function renderReparto(container, params = {}) {
   let fechaActual = params.fecha || hoy();
   let franjas = [];
   let isEditMode = false;
+  let hadExistingReparto = false; // true if the current day already had saved data
   let pickerScroll = null; // preserve scroll position when changing day
 
   async function loadFranjas() {
     const r = await getRepartoByFecha(fechaActual);
     if (r) {
+      hadExistingReparto = true;
       franjas = JSON.parse(JSON.stringify(r.franjas));
       franjas.forEach((f) =>
         f.pedidos.forEach((p) => {
@@ -249,6 +251,7 @@ export async function renderReparto(container, params = {}) {
       franjas.sort((a, b) => a.hora.localeCompare(b.hora));
       isEditMode = false; // By default open in read mode if data exists
     } else {
+      hadExistingReparto = false;
       franjas = [];
       isEditMode = true; // Open in edit mode if new day
     }
@@ -308,7 +311,7 @@ export async function renderReparto(container, params = {}) {
           : ``
       }
       ${
-        isEditMode
+        isEditMode && (franjas.length > 0 || hadExistingReparto)
           ? `<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
                <button class="btn btn-primary" id="btn-guardar" style="display:flex;align-items:center;justify-content:center;gap:6px;font-weight:900;font-size:1rem;letter-spacing:0.5px;box-shadow:0 0 18px rgba(245,158,11,0.5)"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> GUARDAR REPARTO</button>
                <div style="display:flex;gap:10px">
@@ -318,6 +321,8 @@ export async function renderReparto(container, params = {}) {
              </div>`
           : ``
       }
+
+
     `;
 
     // Day picker navigation (week view)
@@ -389,7 +394,7 @@ export async function renderReparto(container, params = {}) {
           return `
           <div class="pedido-row" data-fi="${fi}" data-pi="${pi}" style="flex-direction:column;align-items:stretch;gap:6px;padding:10px 12px;border-radius:8px;margin:3px 0;background:var(--bg)">
             <div style="display:flex;align-items:center;gap:8px;justify-content:space-between">
-              <div class="pedido-bar-name" style="font-family:'Playfair Display',Georgia,serif;font-size:1.05rem;font-weight:600">${p.barNombre}</div>
+              <div class="pedido-bar-name" style="font-family:'Outfit',sans-serif;font-size:1.05rem;font-weight:600;letter-spacing:0.01em">${p.barNombre}</div>
               <button style="background:#ef4444;border:none;border-radius:6px;width:28px;height:28px;min-width:28px;color:white;font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;-webkit-tap-highlight-color:transparent" data-del-pedido data-fi="${fi}" data-pi="${pi}">✕</button>
             </div>
             <div style="display:flex;gap:8px">
@@ -407,7 +412,7 @@ export async function renderReparto(container, params = {}) {
           return `
           <div class="pedido-row" style="cursor:pointer;padding:10px 12px;border-radius:8px;margin:3px 0;flex-direction:column;align-items:stretch;gap:2px;transition:all 0.2s;background:${p.entregado ? "rgba(34,197,94,0.08)" : "var(--bg)"};border-left:3px solid ${p.entregado ? "var(--success)" : "transparent"}" data-toggle-entregado data-fi="${fi}" data-pi="${pi}">
             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-              <div style="font-family:'Playfair Display',Georgia,serif;font-size:1.1rem;font-weight:600;color:${p.entregado ? "var(--text-muted)" : "var(--text)"};text-decoration:${p.entregado ? "line-through" : "none"};line-height:1.2">${p.barNombre}</div>
+              <div style="font-family:'Outfit',sans-serif;font-size:1.1rem;font-weight:600;letter-spacing:0.01em;color:${p.entregado ? "var(--text-muted)" : "var(--text)"};text-decoration:${p.entregado ? "line-through" : "none"};line-height:1.2">${p.barNombre}</div>
               <div style="flex-shrink:0;color:${p.entregado ? "var(--success)" : "rgba(255,255,255,0.18)"}">
                 <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
               </div>
